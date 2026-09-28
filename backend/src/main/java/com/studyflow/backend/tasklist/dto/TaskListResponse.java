@@ -1,4 +1,4 @@
-package com.studyflow.backend.tasklist.repository;
+package com.studyflow.backend.tasklist.dto;
 
 import java.time.LocalDateTime;
 

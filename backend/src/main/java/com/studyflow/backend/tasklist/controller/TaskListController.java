@@ -16,8 +16,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.studyflow.backend.global.response.ApiResponse;
 import com.studyflow.backend.tasklist.dto.TaskListCreateRequest;
+import com.studyflow.backend.tasklist.dto.TaskListResponse;
 import com.studyflow.backend.tasklist.dto.TaskListUpdateRequest;
-import com.studyflow.backend.tasklist.repository.TaskListResponse;
 import com.studyflow.backend.tasklist.service.TaskListService;
 
 import io.swagger.v3.oas.annotations.Operation;

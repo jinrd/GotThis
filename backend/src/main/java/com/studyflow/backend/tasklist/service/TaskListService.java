@@ -8,10 +8,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.studyflow.backend.global.exception.BusinessException;
 import com.studyflow.backend.global.exception.ErrorCode;
 import com.studyflow.backend.tasklist.dto.TaskListCreateRequest;
+import com.studyflow.backend.tasklist.dto.TaskListResponse;
 import com.studyflow.backend.tasklist.dto.TaskListUpdateRequest;
 import com.studyflow.backend.tasklist.entity.TaskList;
 import com.studyflow.backend.tasklist.repository.TaskListRepository;
-import com.studyflow.backend.tasklist.repository.TaskListResponse;
 
 
 @Service 
