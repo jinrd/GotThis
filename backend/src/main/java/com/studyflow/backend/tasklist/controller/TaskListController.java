@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -38,9 +39,10 @@ public class TaskListController {
     @Operation(summary = "목록 생성")
     @PostMapping
     public ResponseEntity<ApiResponse<TaskListResponse>> create(
+        @AuthenticationPrincipal Long userId,
         @Valid @RequestBody TaskListCreateRequest request
     ){
-        TaskListResponse response = taskListService.create(request);
+        TaskListResponse response = taskListService.create(userId, request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(response.id())
@@ -48,30 +50,31 @@ public class TaskListController {
         return ResponseEntity.created(location).body(ApiResponse.ok(response));
     }
 
-        @Operation(summary = "목록 전체 조회")
+    @Operation(summary = "목록 전체 조회")
     @GetMapping
-    public ApiResponse<List<TaskListResponse>> findAll() {
-        return ApiResponse.ok(taskListService.findAll());
+    public ApiResponse<List<TaskListResponse>> findAll(@AuthenticationPrincipal Long userId) {
+        return ApiResponse.ok(taskListService.findAll(userId));
     }
 
     @Operation(summary = "목록 단건 조회")
     @GetMapping("/{id}")
-    public ApiResponse<TaskListResponse> findById(@PathVariable Long id) {
-        return ApiResponse.ok(taskListService.findById(id));
+    public ApiResponse<TaskListResponse> findById(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
+        return ApiResponse.ok(taskListService.findById(userId, id));
     }
 
     @Operation(summary = "목록 수정", description = "보낸 필드만 수정합니다.")
     @PatchMapping("/{id}")
     public ApiResponse<TaskListResponse> update(
+            @AuthenticationPrincipal Long userId, 
             @PathVariable Long id,
             @Valid @RequestBody TaskListUpdateRequest request) {
-        return ApiResponse.ok(taskListService.update(id, request));
+        return ApiResponse.ok(taskListService.update(userId, id, request));
     }
 
     @Operation(summary = "목록 삭제")
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable Long id) {
-        taskListService.delete(id);
+    public ApiResponse<Void> delete(@AuthenticationPrincipal Long userId, @PathVariable Long id) {
+        taskListService.delete(userId, id);
         return ApiResponse.ok();
     }
 }

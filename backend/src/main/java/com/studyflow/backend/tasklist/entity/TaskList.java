@@ -1,12 +1,16 @@
 package com.studyflow.backend.tasklist.entity;
 
 import com.studyflow.backend.global.entity.BaseTimeEntity;
+import com.studyflow.backend.user.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity 
@@ -25,16 +29,21 @@ public class TaskList extends BaseTimeEntity{
     @Column(nullable = false)
     private int sortOrder;
 
+    @ManyToOne (fetch = FetchType.LAZY, optional = false)
+    @JoinColumn (name="user_id", nullable = false)
+    private User user;
+
     protected TaskList() {}
 
-    private TaskList(String name, String color, int sortOrder) {
+    private TaskList(User user, String name, String color, int sortOrder) {
+        this.user = user;
         this.name = name;
         this.color = color;
         this.sortOrder = sortOrder;
     }
 
-    public static TaskList create(String name, String color, int sortOrder) {
-        return new TaskList(name, color, sortOrder);
+    public static TaskList create(User user, String name, String color, int sortOrder) {
+        return new TaskList(user, name, color, sortOrder);
     }
     
     public void update(String name, String color) {

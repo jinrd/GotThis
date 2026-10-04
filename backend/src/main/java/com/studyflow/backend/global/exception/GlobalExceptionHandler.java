@@ -21,6 +21,7 @@ public class GlobalExceptionHandler {
     private final static Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // 1. 우리가 의도적으로 던진 비즈니스 예외
+    @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
         log.warn("BusinessException: code={}, message={}", e.getErrorCode().code(), e.getMessage());
         return toResponse(e.getErrorCode(), e.getMessage(), List.of());
