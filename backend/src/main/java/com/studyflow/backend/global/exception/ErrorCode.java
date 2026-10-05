@@ -20,6 +20,15 @@ public enum ErrorCode {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "만료된 토큰입니다."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
     
+    // Status
+    STATUS_NOT_FOUND(HttpStatus.NOT_FOUND, "상태를 찾을 수 없습니다."),
+    DUPLICATE_STATUS_NAME(HttpStatus.CONFLICT, "이미 같은 이름의 상태가 있습니다."),
+    LAST_STATUS_CANNOT_BE_DELETED(HttpStatus.CONFLICT, "목록에는 상태가 최소 하나 있어야 합니다."),
+    STATUS_IN_USE(HttpStatus.CONFLICT, "할 일이 있는 상태는 삭제할 수 없습니다."),
+
+    // Task
+    TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "할 일을 찾을 수 없습니다."),
+    INVALID_PARENT_TASK(HttpStatus.BAD_REQUEST, "하위 작업에는 하위 작업을 만들 수 없습니다."),
     ;
 
 

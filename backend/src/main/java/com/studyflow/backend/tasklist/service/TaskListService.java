@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.studyflow.backend.global.exception.BusinessException;
 import com.studyflow.backend.global.exception.ErrorCode;
+import com.studyflow.backend.status.entity.Status;
+import com.studyflow.backend.status.repository.StatusRepository;
 import com.studyflow.backend.tasklist.dto.TaskListCreateRequest;
 import com.studyflow.backend.tasklist.dto.TaskListResponse;
 import com.studyflow.backend.tasklist.dto.TaskListUpdateRequest;
@@ -21,10 +23,12 @@ import com.studyflow.backend.user.repository.UserRepository;
 public class TaskListService {
     
     private final TaskListRepository taskListRepository;
+    private final StatusRepository statusRepository;
     private final UserRepository userRepository;
 
-    public TaskListService(TaskListRepository taskListRepository, UserRepository userRepository) {
+    public TaskListService(TaskListRepository taskListRepository, StatusRepository statusRepository,UserRepository userRepository) {
         this.taskListRepository = taskListRepository;
+        this.statusRepository = statusRepository;
         this.userRepository = userRepository;
     }
 
@@ -33,7 +37,10 @@ public class TaskListService {
         User user = userRepository.getReferenceById(userId); // findById 와 refereceById 의 차이점?
         int nextSortOrder = taskListRepository.findMaxSortOrder(userId) + 1;
         TaskList taskList = TaskList.create(user, request.name(), request.color(), nextSortOrder);
-        return TaskListResponse.from(taskListRepository.save(taskList));
+
+        TaskList saved = taskListRepository.save(taskList);
+        statusRepository.saveAll(Status.defaults(saved));
+        return TaskListResponse.from(saved);
     }
 
     public List<TaskListResponse> findAll(Long userId) {
