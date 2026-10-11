@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -95,5 +96,26 @@ public class TaskController {
             @PathVariable Long taskListId,
             @PathVariable Long taskId) {
         return ApiResponse.ok(taskService.findSubtasks(userId, taskListId, taskId));
+    }
+
+    @Operation(summary = "할 일에 태그 붙이기", description = "이미 붙어 있으면 아무것도 하지 않습니다.")
+    @PutMapping("/{taskId}/tags/{tagId}")
+    public ApiResponse<TaskResponse> addTag(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long taskListId,
+            @PathVariable Long taskId,
+            @PathVariable Long tagId) {
+        return ApiResponse.ok(taskService.addTag(userId, taskListId, taskId, tagId));
+    }
+
+    @Operation(summary = "할 일에서 태그 떼기", description = "붙어 있지 않으면 아무것도 하지 않습니다.")
+    @DeleteMapping("/{taskId}/tags/{tagId}")
+    public ApiResponse<TaskResponse> removeTag(
+        @AuthenticationPrincipal Long userId,
+                @PathVariable Long taskListId,
+                @PathVariable Long taskId,
+                @PathVariable Long tagId
+        ) {
+        return ApiResponse.ok(taskService.removeTag(userId, taskListId, taskId, tagId));
     }
 }

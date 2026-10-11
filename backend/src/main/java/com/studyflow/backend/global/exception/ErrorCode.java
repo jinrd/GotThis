@@ -29,6 +29,10 @@ public enum ErrorCode {
     // Task
     TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "할 일을 찾을 수 없습니다."),
     INVALID_PARENT_TASK(HttpStatus.BAD_REQUEST, "하위 작업에는 하위 작업을 만들 수 없습니다."),
+    
+    // Tag
+    TAG_NOT_FOUND(HttpStatus.NOT_FOUND, "태그를 찾을 수 없습니다."),
+    DUPLICATE_TAG_NAME(HttpStatus.CONFLICT, "이미 같은 이름의 태그가 있습니다."),
     ;
 
 
