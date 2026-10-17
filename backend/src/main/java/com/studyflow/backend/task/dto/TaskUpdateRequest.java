@@ -2,8 +2,10 @@ package com.studyflow.backend.task.dto;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.studyflow.backend.task.entity.Priority;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -22,4 +24,10 @@ public record TaskUpdateRequest(
     Boolean clearDueDate,
 
     Long statusId
-) {}
+) {
+    @JsonIgnore 
+    @AssertTrue (message = "dueDate와 clearDueDate는 함께 보낼 수 없습니다.")
+    public boolean isDueDateRequestValid() {
+        return !(dueDate != null && Boolean.TRUE.equals(clearDueDate));
+    }
+}

@@ -1,9 +1,13 @@
 package com.studyflow.backend.global.exception;
 
 import java.util.List;
+import java.util.Map;
 
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -15,6 +19,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.studyflow.backend.global.response.ApiResponse;
 import com.studyflow.backend.global.response.ErrorResponse;
+
 
 @RestControllerAdvice 
 public class GlobalExceptionHandler {
@@ -31,7 +36,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException e) {
         List<ErrorResponse.FieldError> fieldErrors = e.getBindingResult().getFieldErrors().stream()
-                .map(error -> new ErrorResponse.FieldError(error.getField(), error.getDefaultMessage()))
+                .map(error -> new ErrorResponse.FieldError(error.getField(), error.isBindingFailure() ? "형식이 올바르지 않습니다." : error.getDefaultMessage()))
                 .toList();
         return toResponse(ErrorCode.INVALID_INPUT, ErrorCode.INVALID_INPUT.message(), fieldErrors);
     }
@@ -61,7 +66,33 @@ public class GlobalExceptionHandler {
         return toResponse(ErrorCode.INVALID_INPUT, message, List.of());
     }
 
-    // 7. 그 외 예상하지 못한 모든 예외
+    // 제약 이름 → 구체적인 에러 코드 (Flyway 마이그레이션의 CONSTRAINT 이름)
+    private static final Map<String, ErrorCode> CONSTRAINT_ERROR_CODES = Map.of(
+            "uk_users_email", ErrorCode.DUPLICATE_EMAIL,
+            "uk_status_list_name", ErrorCode.DUPLICATE_STATUS_NAME,
+            "uk_tag_user_name", ErrorCode.DUPLICATE_TAG_NAME
+    );
+
+    // 7. DB 제약 위반 (앱 검사를 통과한 동시 요청)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException e) {
+        if (e.getCause() instanceof ConstraintViolationException cve) {
+            ErrorCode mapped = cve.getConstraintName() == null ? null
+                    : CONSTRAINT_ERROR_CODES.get(cve.getConstraintName().toLowerCase());
+            if (mapped != null) {
+                log.warn("Constraint violation: {}", cve.getConstraintName());
+                return toResponse(mapped, mapped.message(), List.of());
+            }
+            if (cve.getKind() == ConstraintKind.UNIQUE || cve.getKind() == ConstraintKind.FOREIGN_KEY) {
+                log.warn("Constraint violation: kind={}, name={}", cve.getKind(), cve.getConstraintName());
+                return toResponse(ErrorCode.DATA_CONFLICT, ErrorCode.DATA_CONFLICT.message(), List.of());
+            }
+        }
+        log.error("Unexpected data integrity violation", e);
+        return toResponse(ErrorCode.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_SERVER_ERROR.message(), List.of());
+    }
+
+    // 8. 그 외 예상하지 못한 모든 예외
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception e) {
         log.error("Unhandled exception", e);
