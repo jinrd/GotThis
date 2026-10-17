@@ -3,10 +3,12 @@ package com.studyflow.backend.task.controller;
 import java.net.URI;
 import java.util.List;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +21,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.studyflow.backend.global.response.ApiResponse;
 import com.studyflow.backend.task.dto.TaskCreateRequest;
 import com.studyflow.backend.task.dto.TaskResponse;
+import com.studyflow.backend.task.dto.TaskSearchCondition;
 import com.studyflow.backend.task.dto.TaskUpdateRequest;
 import com.studyflow.backend.task.service.TaskService;
 
@@ -51,12 +54,15 @@ public class TaskController {
         return ResponseEntity.created(location).body(ApiResponse.ok(response));
     }
 
-    @Operation(summary = "할 일 전체 조회", description = "같은 상태끼리 모아 순서대로 조회합니다.")
+    @Operation(summary = "할 일 전체 조회",
+        description = "같은 상태끼리 모아 순서대로 조회합니다. 모든 조건은 선택이며 함께 주면 AND로 결합합니다. "
+                + "keyword는 제목과 설명에서 대소문자 구분 없이 찾습니다. dueFrom/dueTo를 주면 마감일이 없는 할 일은 제외됩니다.")
     @GetMapping
     public ApiResponse<List<TaskResponse>> findAll(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long taskListId) {
-        return ApiResponse.ok(taskService.findAll(userId, taskListId));
+            @PathVariable Long taskListId,
+            @ParameterObject @Valid @ModelAttribute TaskSearchCondition condition) {
+        return ApiResponse.ok(taskService.findAll(userId, taskListId, condition));
     }
 
     @Operation(summary = "할 일 상세 조회")

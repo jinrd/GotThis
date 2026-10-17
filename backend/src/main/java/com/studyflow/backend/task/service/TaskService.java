@@ -1,10 +1,14 @@
 package com.studyflow.backend.task.service;
 
-import com.studyflow.backend.auth.controller.AuthController;
+import static com.studyflow.backend.task.repository.TaskSpecifications.*;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +21,7 @@ import com.studyflow.backend.tag.entity.Tag;
 import com.studyflow.backend.tag.repository.TagRepository;
 import com.studyflow.backend.task.dto.TaskCreateRequest;
 import com.studyflow.backend.task.dto.TaskResponse;
+import com.studyflow.backend.task.dto.TaskSearchCondition;
 import com.studyflow.backend.task.dto.TaskUpdateRequest;
 import com.studyflow.backend.task.entity.Task;
 import com.studyflow.backend.task.entity.TaskTag;
@@ -28,7 +33,7 @@ import com.studyflow.backend.tasklist.repository.TaskListRepository;
 @Service 
 @Transactional (readOnly = true)
 public class TaskService {
-    private final AuthController authController;
+
     private final TaskRepository taskRepository;
     private final TaskListRepository taskListRepository;
     private final StatusRepository statusRepository;
@@ -36,13 +41,12 @@ public class TaskService {
     private final TagRepository tagRepository;
 
 
-    public TaskService(TaskRepository taskRepository, TaskListRepository taskListRepository, StatusRepository statusRepository, TaskTagRepository taskTagRepository, TagRepository tagRepository, AuthController authController) {
+    public TaskService(TaskRepository taskRepository, TaskListRepository taskListRepository, StatusRepository statusRepository, TaskTagRepository taskTagRepository, TagRepository tagRepository) {
         this.taskRepository = taskRepository;
         this.taskListRepository = taskListRepository;
         this.statusRepository = statusRepository;
         this.taskTagRepository = taskTagRepository;
         this.tagRepository = tagRepository;
-        this.authController = authController;
     }
 
     @Transactional
@@ -60,10 +64,12 @@ public class TaskService {
         return TaskResponse.from(taskRepository.save(task), List.of());
     }
 
-    public List<TaskResponse> findAll(Long userId, Long taskListId) {
+    public List<TaskResponse> findAll(Long userId, Long taskListId, TaskSearchCondition condition) {
         getTaskList(userId, taskListId);
 
-        return toResponses(taskRepository.findAllByTaskListIdOrderByStatusIdAscSortOrderAsc(taskListId));
+        Specification<Task> spec = buildSpec(userId, taskListId, condition);
+
+        return toResponses(taskRepository.findAll(spec, Sort.by("status.id", "sortOrder")));
     }
 
     public TaskResponse findById(Long userId, Long taskListId, Long taskId) {
@@ -177,5 +183,34 @@ public class TaskService {
     }
     private TaskResponse toResponse(Task task) {
         return toResponses(List.of(task)).getFirst();
+    }
+
+
+    private Specification<Task> buildSpec(Long userId, Long taskListId, TaskSearchCondition condition) {
+        List<Specification<Task>> specs = new ArrayList<>();
+        specs.add(belongsTo(taskListId));
+
+        if (condition.statusId() != null) {
+            getStatus(taskListId, condition.statusId());
+            specs.add(hasStatus(condition.statusId()));
+        }
+        if (condition.tagId() != null) {
+            getTag(userId, condition.tagId());
+            specs.add(hasTag(condition.tagId()));
+        }
+        if (condition.priority() != null) {
+            specs.add(hasPriority(condition.priority()));
+        }
+        if (condition.keyword() != null && !condition.keyword().isBlank()) {
+            specs.add(containsKeyword(condition.keyword().strip()));
+        }
+        if (condition.dueFrom() != null) {
+            specs.add(dueOnOrAfter(condition.dueFrom()));
+        }
+        if (condition.dueTo() != null) {
+            specs.add(dueOnOrBefore(condition.dueTo()));
+        }
+
+        return Specification.allOf(specs);
     }
 }
