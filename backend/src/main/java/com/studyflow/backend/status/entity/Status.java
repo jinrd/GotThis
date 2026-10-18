@@ -3,6 +3,7 @@ package com.studyflow.backend.status.entity;
 import java.util.List;
 
 import com.studyflow.backend.global.entity.BaseTimeEntity;
+import com.studyflow.backend.global.ordering.GapOrdering;
 import com.studyflow.backend.tasklist.entity.TaskList;
 
 import jakarta.persistence.Column;
@@ -30,20 +31,20 @@ public class Status extends BaseTimeEntity{
     private String name;
 
     @Column(nullable = false)
-    private int sortOrder;
+    private double sortOrder;
 
     @Column(name = "is_done", nullable = false)
     private boolean done;
 
     protected Status(){}
-    private Status(TaskList taskList, String name, int sortOrder, boolean done) {
+    private Status(TaskList taskList, String name, double sortOrder, boolean done) {
         this.taskList = taskList;
         this.name = name;
         this.sortOrder = sortOrder;
         this.done = done;
     }
 
-    public static Status create(TaskList taskList, String name, int sortOrder, boolean done) {
+    public static Status create(TaskList taskList, String name, double sortOrder, boolean done) {
         return new Status(taskList, name, sortOrder, done);
     }
 
@@ -57,11 +58,15 @@ public class Status extends BaseTimeEntity{
         }
     }
 
+    public void changeSortOrder(double sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
     public static List<Status> defaults(TaskList taskList) {
     return List.of(
-        create(taskList, "할 일", 1, false),
-        create(taskList, "진행 중", 2, false),
-        create(taskList, "완료", 3, true)
+        create(taskList, "할 일", GapOrdering.nth(0), false),
+        create(taskList, "진행 중", GapOrdering.nth(1), false),
+        create(taskList, "완료", GapOrdering.nth(2), true)
     );
 }
 
@@ -77,7 +82,7 @@ public class Status extends BaseTimeEntity{
         return name;
     }
 
-    public int getSortOrder() {
+    public double getSortOrder() {
         return sortOrder;
     }
 

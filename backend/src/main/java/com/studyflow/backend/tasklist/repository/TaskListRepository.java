@@ -14,14 +14,24 @@ import jakarta.persistence.LockModeType;
 
 public interface TaskListRepository extends JpaRepository<TaskList, Long>{
     
-    List<TaskList> findAllByUserIdOrderBySortOrderAsc(Long userId);
+    List<TaskList> findAllByUserIdOrderBySortOrderAscIdAsc(Long userId);
 
     Optional<TaskList> findByIdAndUserId(Long id, Long userId);
 
-    @Query("select coalesce(max(t.sortOrder), 0) from TaskList t where t.user.id = :userId")
-    int findMaxSortOrder(@Param("userId") Long userId);
+    @Query ("select max(t.sortOrder) from TaskList t where t.user.id = :userId")
+    Double findLastSortOrder(@Param("userId") Long userId);
 
     @Lock (LockModeType.PESSIMISTIC_WRITE)
     @Query ("select t from TaskList t where t.id = :id and t.user.id = :userId")
     Optional<TaskList> findByIdAndUserIdForUpdate(@Param ("id") Long id, @Param ("userId") Long userId);
+
+    // 사용자의 목록 중 low와 high 사이(양 끝 제외)에 다른 목록이 있는지
+    @Query("""
+            select case when count(t) > 0 then true else false end
+            from TaskList t
+            where t.user.id = :userId and t.id <> :excludeId
+            and t.sortOrder > :low and t.sortOrder < :high
+            """)
+    boolean existsInUserBetween(@Param("userId") Long userId, @Param("excludeId") Long excludeId,
+                                @Param("low") double low, @Param("high") double high);
 }

@@ -27,7 +27,7 @@ public class TaskList extends BaseTimeEntity{
     private String color;
 
     @Column(nullable = false)
-    private int sortOrder;
+    private double sortOrder;
 
     @ManyToOne (fetch = FetchType.LAZY, optional = false)
     @JoinColumn (name="user_id", nullable = false)
@@ -35,14 +35,14 @@ public class TaskList extends BaseTimeEntity{
 
     protected TaskList() {}
 
-    private TaskList(User user, String name, String color, int sortOrder) {
+    private TaskList(User user, String name, String color, double sortOrder) {
         this.user = user;
         this.name = name;
         this.color = color;
         this.sortOrder = sortOrder;
     }
 
-    public static TaskList create(User user, String name, String color, int sortOrder) {
+    public static TaskList create(User user, String name, String color, double sortOrder) {
         return new TaskList(user, name, color, sortOrder);
     }
     
@@ -55,8 +55,12 @@ public class TaskList extends BaseTimeEntity{
         }
     }
 
+    public void changeSortOrder(double sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
     public Long getId() { return id; }
     public String getName() { return name; }
     public String getColor() { return color; }
-    public int getSortOrder() { return sortOrder; }
+    public double getSortOrder() { return sortOrder; }
 }

@@ -1,11 +1,11 @@
-package com.studyflow.backend.task.service;
+package com.studyflow.backend.global.ordering;
 
 // 간격(Gap) 방식 순서 값 계산. DB 도 JPA 도 모르는 순수 계산이다.
-public final class TaskOrdering {
+public final class GapOrdering {
     public static final double GAP = 65536; // 2^16: 중간값 계산이 2진수로 깔끔하게 떨어진다
     private static final double MIN_GAP = 0.0001;   // 이보다 좁으면 재정렬
 
-    private TaskOrdering() {}
+    private GapOrdering() {}
 
     // 줄의 맨 뒤 값 . 빈 줄이면 last는 null
     public static double after(Double last) {

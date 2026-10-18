@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.studyflow.backend.global.response.ApiResponse;
 import com.studyflow.backend.status.dto.StatusCreateRequest;
+import com.studyflow.backend.status.dto.StatusMoveRequest;
 import com.studyflow.backend.status.dto.StatusResponse;
 import com.studyflow.backend.status.dto.StatusUpdateRequest;
 import com.studyflow.backend.status.service.StatusService;
@@ -62,6 +63,19 @@ public class StatusController {
             @PathVariable Long statusId,
             @Valid @RequestBody StatusUpdateRequest request) {
         return ApiResponse.ok(statusService.update(userId, taskListId, statusId, request));
+    }
+    
+    @Operation(summary = "상태 이동 (드래그 앤 드롭)",
+        description = "놓은 자리의 바로 왼쪽(prevStatusId)과 바로 오른쪽(nextStatusId) 상태를 보냅니다. "
+                + "맨 왼쪽이면 prevStatusId, 맨 오른쪽이면 nextStatusId를 생략합니다. "
+                + "앞뒤가 실제로 바로 이웃이 아니면 400을 반환하므로, 목록을 다시 조회한 뒤 재시도합니다.")
+    @PatchMapping("/{statusId}/position")
+    public ApiResponse<StatusResponse> move(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long taskListId,
+            @PathVariable Long statusId,
+            @RequestBody StatusMoveRequest request) {
+        return ApiResponse.ok(statusService.move(userId, taskListId, statusId, request));
     }
 
     @Operation(summary = "상태 삭제", description = "목록의 마지막 상태는 삭제할 수 없습니다.")

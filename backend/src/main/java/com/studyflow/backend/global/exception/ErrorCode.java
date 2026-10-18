@@ -9,6 +9,8 @@ public enum ErrorCode {
     RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다."),
     DATA_CONFLICT(HttpStatus.CONFLICT, "다른 요청과 충돌했습니다. 다시 시도해 주세요."),
+    INVALID_MOVE_TARGET(HttpStatus.BAD_REQUEST, "이동할 위치의 앞뒤 항목이 올바르지 않습니다."),
+    
     // TaskList
     TASK_LIST_NOT_FOUND(HttpStatus.NOT_FOUND, "목록을 찾을 수 없습니다."),
     // User
@@ -30,7 +32,6 @@ public enum ErrorCode {
     // Task
     TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "할 일을 찾을 수 없습니다."),
     INVALID_PARENT_TASK(HttpStatus.BAD_REQUEST, "하위 작업에는 하위 작업을 만들 수 없습니다."),
-    INVALID_MOVE_TARGET(HttpStatus.BAD_REQUEST, "이동할 위치의 앞뒤 할 일이 올바르지 않습니다."),
     SUBTASK_MOVE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "하위 작업은 아직 이동할 수 없습니다."),
     
     // Tag

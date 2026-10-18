@@ -5,7 +5,7 @@ import com.studyflow.backend.status.entity.Status;
 public record StatusResponse(
     Long id,
     String name,
-    int sortOrder,
+    double sortOrder,
     boolean done
 ) {
     public static StatusResponse from(Status status) {

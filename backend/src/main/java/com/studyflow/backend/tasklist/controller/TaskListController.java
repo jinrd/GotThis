@@ -17,6 +17,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.studyflow.backend.global.response.ApiResponse;
 import com.studyflow.backend.tasklist.dto.TaskListCreateRequest;
+import com.studyflow.backend.tasklist.dto.TaskListMoveRequest;
 import com.studyflow.backend.tasklist.dto.TaskListResponse;
 import com.studyflow.backend.tasklist.dto.TaskListUpdateRequest;
 import com.studyflow.backend.tasklist.service.TaskListService;
@@ -69,6 +70,14 @@ public class TaskListController {
             @PathVariable Long id,
             @Valid @RequestBody TaskListUpdateRequest request) {
         return ApiResponse.ok(taskListService.update(userId, id, request));
+    }
+
+    @PatchMapping("/{id}/position")
+    public ApiResponse<TaskListResponse> move(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long id,
+            @RequestBody TaskListMoveRequest request) {
+        return ApiResponse.ok(taskListService.move(userId, id, request));
     }
 
     @Operation(summary = "목록 삭제")

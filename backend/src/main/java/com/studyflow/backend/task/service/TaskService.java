@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.studyflow.backend.global.exception.BusinessException;
 import com.studyflow.backend.global.exception.ErrorCode;
+import com.studyflow.backend.global.ordering.GapOrdering;
 import com.studyflow.backend.status.entity.Status;
 import com.studyflow.backend.status.repository.StatusRepository;
 import com.studyflow.backend.tag.dto.TagSummary;
@@ -59,7 +60,7 @@ public class TaskService {
         Status status = resolveStatus(taskListId, request.statusId());
         Task parent = resolveParent(taskListId, request.parentId());
 
-        double sortOrder = (parent == null) ? TaskOrdering.after(taskRepository.findLastSortOrder(status.getId())) : TaskOrdering.after(taskRepository.findLastSortOrderByParentId(parent.getId()));
+        double sortOrder = (parent == null) ? GapOrdering.after(taskRepository.findLastSortOrder(status.getId())) : GapOrdering.after(taskRepository.findLastSortOrderByParentId(parent.getId()));
 
         Task task = Task.create(taskList, status, parent, request.title(), request.description(),
                 request.priority(), request.dueDate(), sortOrder);
@@ -92,7 +93,7 @@ public class TaskService {
 
         if (request.statusId() != null && !request.statusId().equals(task.getStatus().getId())) {
             Status status = getStatus(taskListId, request.statusId());
-            double sortOrder = (task.getParent() == null) ? TaskOrdering.after(taskRepository.findLastSortOrder(status.getId())) : task.getSortOrder();
+            double sortOrder = (task.getParent() == null) ? GapOrdering.after(taskRepository.findLastSortOrder(status.getId())) : task.getSortOrder();
 
             task.changeStatus(status, sortOrder);
         }
@@ -121,11 +122,11 @@ public class TaskService {
             throw new BusinessException(ErrorCode.INVALID_MOVE_TARGET);
         }
 
-        if(!TaskOrdering.hasRoom(sortOrderOf(prev), sortOrderOf(next))) {
+        if(!GapOrdering.hasRoom(sortOrderOf(prev), sortOrderOf(next))) {
             rebalance(target.getId());
         }
 
-        task.changeStatus(target, TaskOrdering.between(sortOrderOf(prev), sortOrderOf(next)));
+        task.changeStatus(target, GapOrdering.between(sortOrderOf(prev), sortOrderOf(next)));
         taskRepository.flush(); // 응답의 updatedAt 반영
         return toResponse(task);
     }
@@ -156,7 +157,7 @@ public class TaskService {
     private void rebalance(Long statusId) {
         List<Task> column = taskRepository.findAllByStatusIdAndParentIsNullOrderBySortOrderAscIdAsc(statusId);
         for(int i = 0; i < column.size(); i++) {
-            column.get(i).changeSortOrder(TaskOrdering.nth(i));
+            column.get(i).changeSortOrder(GapOrdering.nth(i));
         }
     }
 
@@ -217,7 +218,7 @@ public class TaskService {
 
     private Status resolveStatus(Long taskListId, Long statusId) {
         if (statusId == null) {
-            return statusRepository.findFirstByTaskListIdOrderBySortOrderAsc(taskListId)
+            return statusRepository.findFirstByTaskListIdOrderBySortOrderAscIdAsc(taskListId)
                                     .orElseThrow(() -> new BusinessException(ErrorCode.STATUS_NOT_FOUND));
         }
 

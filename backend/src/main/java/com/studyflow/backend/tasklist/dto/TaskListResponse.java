@@ -8,7 +8,7 @@ public record TaskListResponse(
     Long id,
     String name,
     String color,
-    int sortOrder,
+    double sortOrder,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {
