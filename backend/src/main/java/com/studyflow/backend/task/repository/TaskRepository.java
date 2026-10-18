@@ -15,12 +15,25 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
     Optional<Task> findByIdAndTaskListId(Long id, Long taskListId);
 
     boolean existsByStatusId(Long statusId);
+    
+    @Query ("select max(t.sortOrder) from Task t where t.status.id = :statusId and t.parent is null" )
+    Double findLastSortOrder(@Param ("statusId") Long statusId);
 
-    @Query("select coalesce(max(t.sortOrder), 0) from Task t where t.status.id = :statusId and t.parent is null")
-    int findMaxSortOrder(@Param("statusId") Long statusId);
+    @Query ("select max(t.sortOrder) from Task t where t.parent.id = :parentId")
+    Double findLastSortOrderByParentId(@Param ("parentId") Long parentId);
 
-    @Query("select coalesce(max(t.sortOrder), 0) from Task t where t.parent.id = :parentId")
-    int findMaxSortOrderByParentId(@Param("parentId") Long parentId);
+    List<Task> findAllByParentIdOrderBySortOrderAscIdAsc(Long parentId);
 
-    List<Task> findAllByParentIdOrderBySortOrderAsc(Long parentId);
+    // 한 열의 최상위 카드 전체 (재정렬용)
+    List<Task> findAllByStatusIdAndParentIsNullOrderBySortOrderAscIdAsc(Long statusId);
+
+    // 열 안에서 low와 high 사이(양 끝 제외)에 다른 카드가 있는지
+    @Query("""
+            select case when count(t) > 0 then true else false end
+            from Task t
+            where t.status.id = :statusId and t.parent is null and t.id <> :excludeId
+            and t.sortOrder > :low and t.sortOrder < :high
+            """)
+    boolean existsInColumnBetween(@Param("statusId") Long statusId, @Param("excludeId") Long excludeId,
+                                @Param("low") double low, @Param("high") double high);
 }

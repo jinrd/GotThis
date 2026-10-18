@@ -1,7 +1,6 @@
 package com.studyflow.backend.task.entity;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import com.studyflow.backend.global.entity.BaseTimeEntity;
 import com.studyflow.backend.status.entity.Status;
@@ -52,11 +51,11 @@ public class Task extends BaseTimeEntity{
     private LocalDate dueDate;
 
     @Column (nullable = false)
-    private int sortOrder;
+    private double sortOrder;
 
     protected Task() {}
 
-    private Task(TaskList taskList, Status status, Task parent, String title, String description, Priority priority, LocalDate dueDate, int sortOrder) {
+    private Task(TaskList taskList, Status status, Task parent, String title, String description, Priority priority, LocalDate dueDate, double sortOrder) {
         this.taskList = taskList;
         this.status = status;
         this.parent = parent;
@@ -67,10 +66,11 @@ public class Task extends BaseTimeEntity{
         this.sortOrder = sortOrder;
     }
 
-    public static Task create(TaskList taskList, Status status, Task parent, String title, String description, Priority priority, LocalDate dueDate, int sortOrder) {
+    public static Task create(TaskList taskList, Status status, Task parent, String title, String description, Priority priority, LocalDate dueDate, double sortOrder) {
         if(priority == null) {
             priority = Priority.NONE;
         }
+
         return new Task(taskList, status, parent, title, description, priority, dueDate, sortOrder);
     }
 
@@ -92,13 +92,17 @@ public class Task extends BaseTimeEntity{
         }
     }
 
-    public void changeStatus(Status status, int sortOrder) {
+    public void changeStatus(Status status, double sortOrder) {
         this.status = status;
         this.sortOrder = sortOrder;
     }
 
     public void clearDueDate() {
         this.dueDate = null;
+    }
+
+    public void changeSortOrder(double sortOrder) {
+        this.sortOrder = sortOrder;
     }
 
     public Long getId() { return id; }
@@ -109,6 +113,6 @@ public class Task extends BaseTimeEntity{
     public String getDescription() { return description; }
     public Priority getPriority() { return priority; }
     public LocalDate getDueDate() { return dueDate; }
-    public int getSortOrder() { return sortOrder; }
+    public double getSortOrder() { return sortOrder; }
 
 }

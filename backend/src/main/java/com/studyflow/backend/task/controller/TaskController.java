@@ -20,6 +20,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.studyflow.backend.global.response.ApiResponse;
 import com.studyflow.backend.task.dto.TaskCreateRequest;
+import com.studyflow.backend.task.dto.TaskMoveRequest;
 import com.studyflow.backend.task.dto.TaskResponse;
 import com.studyflow.backend.task.dto.TaskSearchCondition;
 import com.studyflow.backend.task.dto.TaskUpdateRequest;
@@ -123,5 +124,18 @@ public class TaskController {
                 @PathVariable Long tagId
         ) {
         return ApiResponse.ok(taskService.removeTag(userId, taskListId, taskId, tagId));
+    }
+
+    @Operation(summary = "할 일 이동 (드래그 앤 드롭)",
+        description = "놓은 자리의 바로 위(prevTaskId)와 바로 아래(nextTaskId) 할 일을 보냅니다. "
+                + "맨 위면 prevTaskId, 맨 아래면 nextTaskId를 생략합니다. statusId를 주면 그 상태 열로 옮기고, 생략하면 지금 열 안에서 옮깁니다. "
+                + "앞뒤가 실제로 바로 이웃이 아니면 400을 반환하므로, 목록을 다시 조회한 뒤 재시도합니다. 하위 작업은 아직 이동할 수 없습니다.")
+    @PatchMapping("/{taskId}/position")
+    public ApiResponse<TaskResponse> move(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long taskListId,
+            @PathVariable Long taskId,
+            @RequestBody TaskMoveRequest request) {
+        return ApiResponse.ok(taskService.move(userId, taskListId, taskId, request));
     }
 }

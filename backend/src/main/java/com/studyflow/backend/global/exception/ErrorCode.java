@@ -30,6 +30,8 @@ public enum ErrorCode {
     // Task
     TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "할 일을 찾을 수 없습니다."),
     INVALID_PARENT_TASK(HttpStatus.BAD_REQUEST, "하위 작업에는 하위 작업을 만들 수 없습니다."),
+    INVALID_MOVE_TARGET(HttpStatus.BAD_REQUEST, "이동할 위치의 앞뒤 할 일이 올바르지 않습니다."),
+    SUBTASK_MOVE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "하위 작업은 아직 이동할 수 없습니다."),
     
     // Tag
     TAG_NOT_FOUND(HttpStatus.NOT_FOUND, "태그를 찾을 수 없습니다."),

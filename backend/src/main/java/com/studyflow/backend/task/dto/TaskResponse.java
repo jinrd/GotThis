@@ -16,7 +16,7 @@ public record TaskResponse(
     String description,
     Priority priority,
     LocalDate dueDate,
-    int sortOrder,
+    double sortOrder,
     List<TagSummary> tags,
     LocalDateTime createdAt,
     LocalDateTime updatedAt

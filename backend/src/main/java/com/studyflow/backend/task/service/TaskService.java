@@ -1,5 +1,6 @@
 package com.studyflow.backend.task.service;
 
+import com.studyflow.backend.auth.controller.AuthController;
 import static com.studyflow.backend.task.repository.TaskSpecifications.*;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import com.studyflow.backend.tag.dto.TagSummary;
 import com.studyflow.backend.tag.entity.Tag;
 import com.studyflow.backend.tag.repository.TagRepository;
 import com.studyflow.backend.task.dto.TaskCreateRequest;
+import com.studyflow.backend.task.dto.TaskMoveRequest;
 import com.studyflow.backend.task.dto.TaskResponse;
 import com.studyflow.backend.task.dto.TaskSearchCondition;
 import com.studyflow.backend.task.dto.TaskUpdateRequest;
@@ -34,6 +36,7 @@ import com.studyflow.backend.tasklist.repository.TaskListRepository;
 @Transactional (readOnly = true)
 public class TaskService {
 
+    private final AuthController authController;
     private final TaskRepository taskRepository;
     private final TaskListRepository taskListRepository;
     private final StatusRepository statusRepository;
@@ -41,26 +44,25 @@ public class TaskService {
     private final TagRepository tagRepository;
 
 
-    public TaskService(TaskRepository taskRepository, TaskListRepository taskListRepository, StatusRepository statusRepository, TaskTagRepository taskTagRepository, TagRepository tagRepository) {
+    public TaskService(TaskRepository taskRepository, TaskListRepository taskListRepository, StatusRepository statusRepository, TaskTagRepository taskTagRepository, TagRepository tagRepository, AuthController authController) {
         this.taskRepository = taskRepository;
         this.taskListRepository = taskListRepository;
         this.statusRepository = statusRepository;
         this.taskTagRepository = taskTagRepository;
         this.tagRepository = tagRepository;
+        this.authController = authController;
     }
 
     @Transactional
     public TaskResponse create(Long userId, Long taskListId, TaskCreateRequest request) {
-        TaskList taskList = getTaskList(userId, taskListId);
+        TaskList taskList = lockTaskList(userId, taskListId);
         Status status = resolveStatus(taskListId, request.statusId());
         Task parent = resolveParent(taskListId, request.parentId());
 
-        int nextSortOrder = (parent == null)
-                ? taskRepository.findMaxSortOrder(status.getId()) + 1
-                : taskRepository.findMaxSortOrderByParentId(parent.getId()) + 1;
+        double sortOrder = (parent == null) ? TaskOrdering.after(taskRepository.findLastSortOrder(status.getId())) : TaskOrdering.after(taskRepository.findLastSortOrderByParentId(parent.getId()));
 
         Task task = Task.create(taskList, status, parent, request.title(), request.description(),
-                request.priority(), request.dueDate(), nextSortOrder);
+                request.priority(), request.dueDate(), sortOrder);
         return TaskResponse.from(taskRepository.save(task), List.of());
     }
 
@@ -69,7 +71,7 @@ public class TaskService {
 
         Specification<Task> spec = buildSpec(userId, taskListId, condition);
 
-        return toResponses(taskRepository.findAll(spec, Sort.by("status.id", "sortOrder")));
+        return toResponses(taskRepository.findAll(spec, Sort.by("status.id", "sortOrder", "id")));
     }
 
     public TaskResponse findById(Long userId, Long taskListId, Long taskId) {
@@ -78,7 +80,10 @@ public class TaskService {
 
     @Transactional
     public TaskResponse update(Long userId, Long taskListId, Long taskId, TaskUpdateRequest request) {
-        Task task = getTask(userId, taskListId, taskId);
+        lockTaskList(userId, taskListId);
+        
+        Task task = taskRepository.findByIdAndTaskListId(taskId, taskListId).orElseThrow(() -> new BusinessException(ErrorCode.TASK_NOT_FOUND));
+
         task.update(request.title(), request.description(), request.priority(), request.dueDate());
 
         if (Boolean.TRUE.equals(request.clearDueDate())) {
@@ -87,9 +92,8 @@ public class TaskService {
 
         if (request.statusId() != null && !request.statusId().equals(task.getStatus().getId())) {
             Status status = getStatus(taskListId, request.statusId());
-            int sortOrder = (task.getParent() == null)
-                    ? taskRepository.findMaxSortOrder(status.getId()) + 1
-                    : task.getSortOrder();     // 하위 작업은 부모 안의 순서를 유지
+            double sortOrder = (task.getParent() == null) ? TaskOrdering.after(taskRepository.findLastSortOrder(status.getId())) : task.getSortOrder();
+
             task.changeStatus(status, sortOrder);
         }
 
@@ -97,9 +101,68 @@ public class TaskService {
         return toResponse(task);
     }
 
+    @Transactional 
+    public TaskResponse move(Long userId, Long taskListId, Long taskId, TaskMoveRequest request) {
+        lockTaskList(userId, taskListId);
+        Task task = findTaskInList(taskListId, taskId);
+
+        if(task.getParent() != null) {
+            throw new BusinessException(ErrorCode.SUBTASK_MOVE_NOT_SUPPORTED);
+        }
+
+        Status target = (request.statusId() == null) ? task.getStatus() : getStatus(taskListId, request.statusId());
+        Task prev = findNeighbor(taskListId, task, target, request.prevTaskId());
+        Task next = findNeighbor(taskListId, task, target, request.nextTaskId());
+
+        // 앞뒤가 진짜 "바로 앞, 바로 뒤"인지: 순서가 맞고, 사이에 다른 카드가 없어야 한다.
+        double low = (prev == null) ? 0.0 : prev.getSortOrder();
+        double high = (next == null) ? Double.MAX_VALUE : next.getSortOrder();
+        if (low >= high || taskRepository.existsInColumnBetween(target.getId(), task.getId(), low, high)) {
+            throw new BusinessException(ErrorCode.INVALID_MOVE_TARGET);
+        }
+
+        if(!TaskOrdering.hasRoom(sortOrderOf(prev), sortOrderOf(next))) {
+            rebalance(target.getId());
+        }
+
+        task.changeStatus(target, TaskOrdering.between(sortOrderOf(prev), sortOrderOf(next)));
+        taskRepository.flush(); // 응답의 updatedAt 반영
+        return toResponse(task);
+    }
+
+    private Task findTaskInList(Long taskListId, Long taskId) {
+        return taskRepository.findByIdAndTaskListId(taskId, taskListId).orElseThrow(() -> new BusinessException(ErrorCode.TASK_NOT_FOUND));
+    }
+
+    // 앞뒤 카드는 같은 공책, 같은 열의 최상위 카드여야 하고, 옮기는 카드 자신이면 안된다.
+    private Task findNeighbor(Long taskListId, Task moving, Status target, Long neighborId) {
+        if(neighborId == null) { 
+            return null;
+        }
+
+        Task neighbor = findTaskInList(taskListId, neighborId);
+        if(neighbor.getId().equals(moving.getId()) || neighbor.getParent() != null || !neighbor.getStatus().getId().equals(target.getId())) {
+            throw new BusinessException(ErrorCode.INVALID_MOVE_TARGET);
+        }
+
+        return neighbor;
+    }
+ 
+    private Double sortOrderOf(Task task) {
+        return (task == null) ? null : task.getSortOrder();
+    }
+
+    // 열 전체를 GAP, 2GAP, 3GAP ... 으로 다시 매긴다(간격이 바닥났을 때만)
+    private void rebalance(Long statusId) {
+        List<Task> column = taskRepository.findAllByStatusIdAndParentIsNullOrderBySortOrderAscIdAsc(statusId);
+        for(int i = 0; i < column.size(); i++) {
+            column.get(i).changeSortOrder(TaskOrdering.nth(i));
+        }
+    }
+
     public List<TaskResponse> findSubtasks(Long userId, Long taskListId, Long taskId) {
         getTask(userId, taskListId, taskId);   // 소유권 확인 (부모가 내 것인가)
-        return toResponses(taskRepository.findAllByParentIdOrderBySortOrderAsc(taskId));
+        return toResponses(taskRepository.findAllByParentIdOrderBySortOrderAscIdAsc(taskId));
 
     }
 
@@ -131,6 +194,11 @@ public class TaskService {
 
     private TaskList getTaskList(Long userId, Long taskListId) {
         return taskListRepository.findByIdAndUserId(taskListId, userId).orElseThrow(() -> new BusinessException(ErrorCode.TASK_LIST_NOT_FOUND));
+    }
+
+    private TaskList lockTaskList(Long userId, Long taskListId) {
+        return taskListRepository.findByIdAndUserIdForUpdate(taskListId, userId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.TASK_LIST_NOT_FOUND));
     }
 
     private Task getTask(Long userId, Long taskListId, Long taskId) {
