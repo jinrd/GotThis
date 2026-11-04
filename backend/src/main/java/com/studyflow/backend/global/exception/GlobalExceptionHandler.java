@@ -70,7 +70,8 @@ public class GlobalExceptionHandler {
     private static final Map<String, ErrorCode> CONSTRAINT_ERROR_CODES = Map.of(
             "uk_users_email", ErrorCode.DUPLICATE_EMAIL,
             "uk_status_list_name", ErrorCode.DUPLICATE_STATUS_NAME,
-            "uk_tag_user_name", ErrorCode.DUPLICATE_TAG_NAME
+            "uk_tag_user_name", ErrorCode.DUPLICATE_TAG_NAME,
+            "uk_field_definition_name", ErrorCode.DUPLICATE_FIELD_NAME
     );
 
     // 7. DB 제약 위반 (앱 검사를 통과한 동시 요청)

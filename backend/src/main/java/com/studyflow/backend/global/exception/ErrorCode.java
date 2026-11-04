@@ -37,6 +37,12 @@ public enum ErrorCode {
     // Tag
     TAG_NOT_FOUND(HttpStatus.NOT_FOUND, "태그를 찾을 수 없습니다."),
     DUPLICATE_TAG_NAME(HttpStatus.CONFLICT, "이미 같은 이름의 태그가 있습니다."),
+
+    // FieldDefinition
+    FIELD_NOT_FOUND(HttpStatus.NOT_FOUND, "필드를 찾을 수 없습니다."),
+    DUPLICATE_FIELD_NAME(HttpStatus.CONFLICT, "이미 같은 이름의 필드가 있습니다."),
+    FIELD_OPTIONS_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "선택지는 SELECT 타입 필드에만 지정할 수 있습니다."),
+    INVALID_PROPERTY_VALUE(HttpStatus.BAD_REQUEST, "필드 값이 올바르지 않습니다."),
     ;
 
 

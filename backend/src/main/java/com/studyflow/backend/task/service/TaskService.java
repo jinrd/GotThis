@@ -1,11 +1,12 @@
 package com.studyflow.backend.task.service;
 
-import com.studyflow.backend.auth.controller.AuthController;
 import static com.studyflow.backend.task.repository.TaskSpecifications.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Sort;
@@ -13,6 +14,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.studyflow.backend.fielddefinition.entity.FieldDefinition;
+import com.studyflow.backend.fielddefinition.repository.FieldDefinitionRepository;
 import com.studyflow.backend.global.exception.BusinessException;
 import com.studyflow.backend.global.exception.ErrorCode;
 import com.studyflow.backend.global.ordering.GapOrdering;
@@ -23,6 +26,7 @@ import com.studyflow.backend.tag.entity.Tag;
 import com.studyflow.backend.tag.repository.TagRepository;
 import com.studyflow.backend.task.dto.TaskCreateRequest;
 import com.studyflow.backend.task.dto.TaskMoveRequest;
+import com.studyflow.backend.task.dto.TaskPropertiesUpdateRequest;
 import com.studyflow.backend.task.dto.TaskResponse;
 import com.studyflow.backend.task.dto.TaskSearchCondition;
 import com.studyflow.backend.task.dto.TaskUpdateRequest;
@@ -37,21 +41,21 @@ import com.studyflow.backend.tasklist.repository.TaskListRepository;
 @Transactional (readOnly = true)
 public class TaskService {
 
-    private final AuthController authController;
     private final TaskRepository taskRepository;
     private final TaskListRepository taskListRepository;
     private final StatusRepository statusRepository;
     private final TaskTagRepository taskTagRepository;
     private final TagRepository tagRepository;
+    private final FieldDefinitionRepository fieldDefinitionRepository;
 
 
-    public TaskService(TaskRepository taskRepository, TaskListRepository taskListRepository, StatusRepository statusRepository, TaskTagRepository taskTagRepository, TagRepository tagRepository, AuthController authController) {
+    public TaskService(TaskRepository taskRepository, TaskListRepository taskListRepository, StatusRepository statusRepository, TaskTagRepository taskTagRepository, TagRepository tagRepository, FieldDefinitionRepository fieldDefinitionRepository) {
         this.taskRepository = taskRepository;
         this.taskListRepository = taskListRepository;
         this.statusRepository = statusRepository;
         this.taskTagRepository = taskTagRepository;
         this.tagRepository = tagRepository;
-        this.authController = authController;
+        this.fieldDefinitionRepository = fieldDefinitionRepository;
     }
 
     @Transactional
@@ -190,6 +194,34 @@ public class TaskService {
         getTag(userId, tagId);
         taskTagRepository.findByTaskIdAndTagId(taskId, tagId)
                 .ifPresent(taskTagRepository::delete);
+        return toResponse(task);
+    }
+
+    // 보낸 키만 병합한다. 값이 null이면 그 속성을 지운다.
+    @Transactional
+    public TaskResponse updateProperties(Long userId, Long taskListId, Long taskId, TaskPropertiesUpdateRequest request) {
+        lockTaskList(userId, taskListId); // 필드 정의 변경, 다른 속성 쓰기와 차례로 실행되게 한다
+        Task task = findTaskInList(taskListId, taskId);
+
+        Map<String, FieldDefinition> fieldsByKey = fieldDefinitionRepository
+                .findAllByTaskListIdOrderBySortOrderAscIdAsc(taskListId).stream()
+                .collect(Collectors.toMap(FieldDefinition::propertyKey, Function.identity()));
+
+        Map<String, Object> merged = new HashMap<>(task.getProperties());
+        request.values().forEach((key, value) -> {
+            FieldDefinition field = fieldsByKey.get(key);
+            if (field == null) {
+                throw new BusinessException(ErrorCode.FIELD_NOT_FOUND);
+            }
+            if (value == null) {
+                merged.remove(key);
+            } else {
+                merged.put(key, field.normalizeValue(value));
+            }
+        });
+
+        task.replaceProperties(merged);
+        taskRepository.flush(); // 응답의 updatedAt 반영
         return toResponse(task);
     }
 

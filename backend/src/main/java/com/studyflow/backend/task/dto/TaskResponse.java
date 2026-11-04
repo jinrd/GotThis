@@ -3,6 +3,7 @@ package com.studyflow.backend.task.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import com.studyflow.backend.tag.dto.TagSummary;
 import com.studyflow.backend.task.entity.Priority;
@@ -18,6 +19,7 @@ public record TaskResponse(
     LocalDate dueDate,
     double sortOrder,
     List<TagSummary> tags,
+    Map<String, Object> properties,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {
@@ -32,6 +34,7 @@ public record TaskResponse(
             task.getDueDate(),
             task.getSortOrder(),
             tags,
+            task.getProperties(),
             task.getCreatedAt(),
             task.getUpdatedAt()
         );

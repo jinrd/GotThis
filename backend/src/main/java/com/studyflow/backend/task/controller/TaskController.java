@@ -21,6 +21,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.studyflow.backend.global.response.ApiResponse;
 import com.studyflow.backend.task.dto.TaskCreateRequest;
 import com.studyflow.backend.task.dto.TaskMoveRequest;
+import com.studyflow.backend.task.dto.TaskPropertiesUpdateRequest;
 import com.studyflow.backend.task.dto.TaskResponse;
 import com.studyflow.backend.task.dto.TaskSearchCondition;
 import com.studyflow.backend.task.dto.TaskUpdateRequest;
@@ -124,6 +125,18 @@ public class TaskController {
                 @PathVariable Long tagId
         ) {
         return ApiResponse.ok(taskService.removeTag(userId, taskListId, taskId, tagId));
+    }
+
+    @Operation(summary = "할 일 속성 값 수정",
+        description = "values의 키는 필드 id, 값은 필드 타입에 맞는 값입니다(TEXT·SELECT·DATE는 문자열, NUMBER는 숫자, CHECKBOX는 true/false). "
+                + "보낸 키만 바꾸고, 값을 null로 보내면 그 속성을 지웁니다. 목록에 없는 필드 id는 404, 타입이 맞지 않으면 400입니다.")
+    @PatchMapping("/{taskId}/properties")
+    public ApiResponse<TaskResponse> updateProperties(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long taskListId,
+            @PathVariable Long taskId,
+            @Valid @RequestBody TaskPropertiesUpdateRequest request) {
+        return ApiResponse.ok(taskService.updateProperties(userId, taskListId, taskId, request));
     }
 
     @Operation(summary = "할 일 이동 (드래그 앤 드롭)",

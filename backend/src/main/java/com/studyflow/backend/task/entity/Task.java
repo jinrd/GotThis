@@ -1,6 +1,12 @@
 package com.studyflow.backend.task.entity;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import com.studyflow.backend.global.entity.BaseTimeEntity;
 import com.studyflow.backend.status.entity.Status;
@@ -53,6 +59,10 @@ public class Task extends BaseTimeEntity{
     @Column (nullable = false)
     private double sortOrder;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(nullable = false)
+    private Map<String, Object> properties = new HashMap<>();
+
     protected Task() {}
 
     private Task(TaskList taskList, Status status, Task parent, String title, String description, Priority priority, LocalDate dueDate, double sortOrder) {
@@ -104,6 +114,13 @@ public class Task extends BaseTimeEntity{
     public void changeSortOrder(double sortOrder) {
         this.sortOrder = sortOrder;
     }
+    public void replaceProperties(Map<String, Object> properties) {
+        this.properties = new HashMap<>(properties);
+    }
+
+    public String propertyKey() {
+        return String.valueOf(id);
+    }
 
     public Long getId() { return id; }
     public TaskList getTaskList() { return taskList; }
@@ -114,5 +131,9 @@ public class Task extends BaseTimeEntity{
     public Priority getPriority() { return priority; }
     public LocalDate getDueDate() { return dueDate; }
     public double getSortOrder() { return sortOrder; }
+    public Map<String, Object> getProperties() {
+        return Collections.unmodifiableMap(properties);
+    }
+
 
 }
