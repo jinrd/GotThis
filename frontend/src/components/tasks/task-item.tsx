@@ -43,7 +43,7 @@ export function TaskItemBody({ task, variant, overlay }: { task: Task; variant: 
 
   return (
     <div
-      className={`group relative flex items-start gap-3 ${shell} ${overlay ? "cursor-grabbing shadow-lg ring-2 ring-accent" : ""} ${
+      className={`group relative flex items-start gap-2 sm:gap-3 ${shell} ${overlay ? "cursor-grabbing shadow-lg ring-2 ring-accent" : ""} ${
         dragDisabled ? "" : "cursor-grab active:cursor-grabbing"
       }`}
     >
@@ -53,14 +53,14 @@ export function TaskItemBody({ task, variant, overlay }: { task: Task; variant: 
           aria-hidden
         />
       )}
-      <div className="pt-0.5">
+      <div className="pt-2.5 sm:pt-0.5">
         <DoneCheckbox task={task} />
       </div>
       <div className={`min-w-0 flex-1 ${variant === "row" ? "flex flex-col gap-1 md:flex-row md:items-center md:gap-4" : "space-y-2"}`}>
         <button
           type="button"
           onClick={() => openTask(task.id)}
-          className={`min-h-6 text-left text-base leading-snug break-words hover:underline md:flex-1 ${
+          className={`min-h-11 text-left text-base leading-relaxed break-words [overflow-wrap:anywhere] sm:min-h-6 sm:leading-snug hover:underline md:flex-1 ${
             done ? "text-fg-muted line-through" : "text-fg"
           }`}
         >

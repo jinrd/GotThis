@@ -33,7 +33,7 @@ export function ThemeSwitch() {
               saveTheme(choice);
               setTheme(choice);
             }}
-            className={`flex min-h-9 items-center justify-center gap-1.5 rounded-md text-sm ${
+            className={`flex min-h-11 items-center sm:min-h-9 justify-center gap-1.5 rounded-md text-sm ${
               selected ? "bg-surface font-medium text-fg shadow-sm" : "text-fg-muted hover:text-fg"
             }`}
           >

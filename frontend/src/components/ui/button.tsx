@@ -16,7 +16,7 @@ type ButtonProps = ComponentProps<"button"> & {
 
 // 터치 영역은 최소 44px(md) — 손가락으로도 잘못 누르지 않게
 export function Button({ variant = "secondary", size = "md", className = "", type = "button", ...props }: ButtonProps) {
-  const sizing = size === "md" ? "min-h-11 px-4 text-base" : "min-h-9 px-3 text-sm";
+  const sizing = size === "md" ? "min-h-11 px-4 text-base" : "min-h-11 px-3 text-sm sm:min-h-9";
   return (
     <button
       type={type}
@@ -35,7 +35,7 @@ export function IconButton({ label, className = "", type = "button", ...props }:
       type={type}
       aria-label={label}
       title={label}
-      className={`grid size-9 shrink-0 place-items-center rounded-lg text-fg-muted transition hover:bg-subtle hover:text-fg disabled:opacity-50 ${className}`}
+      className={`grid size-11 shrink-0 sm:size-9 place-items-center rounded-lg text-fg-muted transition hover:bg-subtle hover:text-fg disabled:opacity-50 ${className}`}
       {...props}
     />
   );

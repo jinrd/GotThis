@@ -5,7 +5,7 @@ import {
   closestCorners,
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   useDroppable,
   useSensor,
@@ -51,7 +51,7 @@ export function TaskDnd({ groups, variant, children }: TaskDndProps) {
 
   const sensors = useSensors(
     // 6px 이상 움직여야 드래그로 본다. 그보다 짧으면 평범한 클릭이다.
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     // 터치는 길게 눌러야 드래그가 시작된다. 그래야 스크롤과 헷갈리지 않는다.
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 6 } }),
   );

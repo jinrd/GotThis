@@ -3,17 +3,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Columns3, List as ListIcon, Settings } from "lucide-react";
+import { Columns3, List as ListIcon, Plus, Settings } from "lucide-react";
 import type { Task } from "@/lib/api/types";
 import { errorMessage, hasErrorCode } from "@/lib/errors";
 import { readStorage, storageKeys, writeStorage } from "@/lib/storage";
 import { countSubtasks, groupByStatus } from "@/lib/tasks";
 import { useFields, useStatuses, useTaskLists, useTags, useTasks } from "@/hooks/queries";
 import { useShortcut } from "@/hooks/use-shortcut";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useTaskActions } from "@/hooks/use-task-actions";
 import { Button } from "@/components/ui/button";
+import { Label, Select } from "@/components/ui/field";
+import { AddTask } from "@/components/tasks/add-task";
 import { ColorDot } from "@/components/ui/color-picker";
-import { ConfirmDialog } from "@/components/ui/dialog";
+import { ConfirmDialog, Dialog } from "@/components/ui/dialog";
 import { Hint } from "@/components/ui/hint";
 import { SidebarToggle, ToggleOnlyHeader } from "@/components/layout/app-shell";
 import { isSettingsTab, ListSettings, type SettingsTab } from "@/components/settings/list-settings";
@@ -50,8 +53,11 @@ function ListScreenInner({ listId }: { listId: number }) {
 
   const [view, setView] = useState<View>(() => (readStorage(storageKeys.view(listId)) === "board" ? "board" : "list"));
   const [addingStatusId, setAddingStatusId] = useState<number | null>(null);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddStatusId, setQuickAddStatusId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<Task | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const narrow = useMediaQuery("(max-width: 1023px)");
 
   const actions = useTaskActions(listId, statuses);
 
@@ -123,13 +129,13 @@ function ListScreenInner({ listId }: { listId: number }) {
   return (
     <ListContext.Provider value={contextValue}>
       <div className="flex min-h-0 flex-1">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="space-y-3 border-b border-line bg-surface px-4 py-3 md:px-6">
-            <div className="flex items-center gap-2">
+        <div inert={openTaskId !== null && narrow} className="flex min-w-0 flex-1 flex-col">
+          <header className="shrink-0 space-y-3 border-b border-line bg-surface px-4 py-3 md:px-6">
+            <div className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-3 sm:flex">
               <SidebarToggle />
               <ColorDot color={list?.color ?? null} className="size-3.5" />
-              <h1 className="min-w-0 flex-1 truncate text-xl font-bold">{list?.name ?? ""}</h1>
-              <div role="radiogroup" aria-label="보기 방식" className="flex rounded-lg bg-subtle p-1">
+              <h1 className="min-w-0 flex-1 truncate text-xl font-bold" title={list?.name}>{list?.name ?? ""}</h1>
+              <div role="radiogroup" aria-label="보기 방식" className="col-span-3 row-start-2 flex w-fit rounded-lg bg-subtle p-1">
                 {(
                   [
                     ["list", "리스트", ListIcon],
@@ -142,17 +148,16 @@ function ListScreenInner({ listId }: { listId: number }) {
                     role="radio"
                     aria-checked={view === value}
                     onClick={() => changeView(value)}
-                    className={`flex min-h-9 items-center gap-1.5 rounded-md px-3 text-sm ${
+                    className={`flex min-h-11 items-center gap-2 rounded-md px-4 text-sm sm:min-h-9 sm:gap-1.5 sm:px-3 ${
                       view === value ? "bg-surface font-semibold text-fg shadow-sm" : "text-fg-muted hover:text-fg"
                     }`}
                   >
                     <Icon className="size-4" aria-hidden />
-                    <span className="hidden sm:inline">{label}</span>
-                    <span className="sr-only sm:hidden">{label}</span>
+                    <span>{label}</span>
                   </button>
                 ))}
               </div>
-              <Button variant="ghost" onClick={() => setParam("settings", "basic")} aria-label="목록 설정">
+              <Button variant="ghost" className="col-start-4 row-start-1 px-3" onClick={() => setParam("settings", "basic")} aria-label="목록 설정">
                 <Settings className="size-5" aria-hidden />
                 <span className="hidden md:inline">설정</span>
               </Button>
@@ -160,8 +165,8 @@ function ListScreenInner({ listId }: { listId: number }) {
             <FilterBar filter={filter} onChange={setFilter} statuses={statuses} tags={tags} searchRef={searchRef} />
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-4xl space-y-2 px-4 pt-4 md:px-6 empty:hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+            <div className="mx-auto w-full max-w-4xl shrink-0 space-y-2 px-4 pt-4 md:px-6 empty:hidden">
               {filterActive && (
                 <p className="text-sm text-fg-muted" role="status">
                   필터를 쓰는 중에는 끌어서 순서를 바꿀 수 없어요. 상태는 ⋯ 메뉴로 옮길 수 있어요.
@@ -197,11 +202,18 @@ function ListScreenInner({ listId }: { listId: number }) {
               <BoardView groups={groups} addingStatusId={addingStatusId} onAddingChange={setAddingStatusId} />
             )}
           </div>
+          <div className="safe-bottom shrink-0 border-t border-line bg-surface px-4 pt-3 sm:hidden">
+            <Button variant="primary" className="w-full" disabled={statuses.length === 0} onClick={() => setQuickAddOpen(true)}>
+              <Plus className="size-5" aria-hidden />
+              할 일 추가
+            </Button>
+          </div>
         </div>
 
         {openTaskId !== null && (
           <TaskDetail
             key={openTaskId}
+            modal={narrow}
             taskId={openTaskId}
             fallback={tasks.find((t) => t.id === openTaskId)}
             fields={fields}
@@ -211,6 +223,16 @@ function ListScreenInner({ listId }: { listId: number }) {
           />
         )}
       </div>
+
+      <Dialog open={quickAddOpen} onClose={() => setQuickAddOpen(false)} title="할 일 추가">
+        <Label htmlFor="quick-add-status">추가할 상태</Label>
+        <Select id="quick-add-status" value={quickAddStatusId ?? statuses.find((s) => !s.done)?.id ?? statuses[0]?.id ?? ""} onChange={(e) => setQuickAddStatusId(Number(e.target.value))}>
+          {statuses.map((status) => <option key={status.id} value={status.id}>{status.name}</option>)}
+        </Select>
+        <div className="mt-3">
+          <AddTask active={quickAddOpen} statusId={quickAddStatusId ?? statuses.find((s) => !s.done)?.id ?? statuses[0]?.id} onActiveChange={(active) => { if (!active) setQuickAddOpen(false); }} />
+        </div>
+      </Dialog>
 
       {list && (
         <ListSettings

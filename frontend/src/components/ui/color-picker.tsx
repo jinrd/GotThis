@@ -25,7 +25,7 @@ export function ColorPicker({
             aria-label={color.name}
             title={color.name}
             onClick={() => onChange(color.value)}
-            className={`grid size-9 place-items-center rounded-full border-2 ${
+            className={`grid size-11 place-items-center sm:size-9 rounded-full border-2 ${
               selected ? "border-fg" : "border-transparent"
             }`}
           >

@@ -19,7 +19,10 @@ export function Dialog({ open, onClose, title, children, size = "sm" }: DialogPr
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      dialog.showModal();
+      dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    }
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
@@ -34,20 +37,21 @@ export function Dialog({ open, onClose, title, children, size = "sm" }: DialogPr
         // 배경(다이얼로그 바깥)을 누르면 닫는다
         if (e.target === e.currentTarget) onClose();
       }}
+      data-size={size}
       aria-label={title}
-      className={`m-auto w-[calc(100%-2rem)] rounded-2xl border border-line bg-surface p-0 text-fg shadow-xl ${
+      className={`dialog-panel m-auto w-[calc(100%-2rem)] rounded-2xl border border-line bg-surface p-0 text-fg shadow-xl ${
         size === "lg" ? "max-w-2xl" : "max-w-md"
       }`}
     >
       {open && (
-        <div className="flex max-h-[85vh] flex-col">
-          <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-4">
-            <h2 className="text-lg font-semibold">{title}</h2>
+        <div className="flex max-h-[calc(100dvh-2rem)] flex-col sm:max-h-[85dvh]">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-5 py-4">
+            <h2 className="min-w-0 break-words text-lg font-semibold">{title}</h2>
             <IconButton label="닫기" onClick={onClose}>
               <X className="size-5" aria-hidden />
             </IconButton>
           </div>
-          <div className="overflow-y-auto px-5 py-4">{children}</div>
+          <div className="safe-bottom min-h-0 overflow-y-auto overscroll-contain px-5 pt-4">{children}</div>
         </div>
       )}
     </dialog>

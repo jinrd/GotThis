@@ -53,6 +53,7 @@ export function NewListDialog({ open, onClose }: { open: boolean; onClose: () =>
           <Input
             id="new-list-name"
             autoFocus
+            data-autofocus
             maxLength={50}
             value={name}
             onChange={(e) => setName(e.target.value)}

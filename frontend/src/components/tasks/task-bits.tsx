@@ -27,7 +27,7 @@ export function DoneCheckbox({ task, size = "md" }: { task: Task; size?: "md" | 
         actions.toggleDone(task);
       }}
       onPointerDown={(e) => e.stopPropagation()}
-      className="-m-2 grid size-10 shrink-0 place-items-center rounded-lg disabled:cursor-not-allowed disabled:opacity-40"
+      className="-m-2 grid size-11 sm:size-10 shrink-0 place-items-center rounded-lg disabled:cursor-not-allowed disabled:opacity-40"
     >
       <span
         className={`grid ${box} place-items-center rounded-full border-2 transition ${
@@ -70,9 +70,9 @@ export function TagChips({ tags, max = 3 }: { tags: TagSummary[]; max?: number }
   return (
     <span className="inline-flex flex-wrap items-center gap-1">
       {shown.map((tag) => (
-        <span key={tag.id} className="inline-flex items-center gap-1 rounded-full border border-line px-2 py-0.5 text-xs text-fg">
+        <span key={tag.id} className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-full border border-line px-2 py-0.5 text-xs text-fg">
           <ColorDot color={tag.color} className="size-2" />
-          {tag.name}
+          <span className="truncate">{tag.name}</span>
         </span>
       ))}
       {tags.length > max && <span className="text-xs text-fg-muted">+{tags.length - max}</span>}

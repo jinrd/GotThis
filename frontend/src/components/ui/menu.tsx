@@ -18,6 +18,7 @@ export type MenuItem =
 // 모든 항목의 "⋯" 메뉴. 드래그나 hover를 몰라도 이 버튼 하나로 모든 기능에 닿게 한다.
 export function Menu({ label, items, trigger }: { label: string; items: MenuItem[]; trigger?: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -57,6 +58,7 @@ export function Menu({ label, items, trigger }: { label: string; items: MenuItem
     );
     const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
     if (e.key === "Escape") {
+      e.preventDefault();
       e.stopPropagation();
       setOpen(false);
       buttonRef.current?.focus();
@@ -81,6 +83,7 @@ export function Menu({ label, items, trigger }: { label: string; items: MenuItem
         aria-controls={open ? menuId : undefined}
         onClick={(e) => {
           e.stopPropagation();
+          setPortalContainer(e.currentTarget.closest("dialog"));
           setOpen((v) => !v);
         }}
         onPointerDown={(e) => e.stopPropagation()}
@@ -114,7 +117,7 @@ export function Menu({ label, items, trigger }: { label: string; items: MenuItem
                     setOpen(false);
                     item.onSelect();
                   }}
-                  className={`flex min-h-10 w-full items-center gap-2.5 rounded-lg px-3 text-left text-base hover:bg-subtle focus:bg-subtle focus:outline-none disabled:opacity-40 ${
+                  className={`flex min-h-11 w-full sm:min-h-10 items-center gap-2.5 rounded-lg px-3 text-left text-base hover:bg-subtle focus:bg-subtle focus:outline-none disabled:opacity-40 ${
                     item.danger ? "text-danger" : ""
                   }`}
                 >
@@ -124,7 +127,7 @@ export function Menu({ label, items, trigger }: { label: string; items: MenuItem
               ),
             )}
           </div>,
-          document.body,
+          portalContainer ?? document.body,
         )}
     </>
   );

@@ -42,7 +42,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {/* 스크린 리더가 새 알림을 읽도록 live region으로 둔다 */}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex flex-col items-center gap-2 px-4"
+        className="pointer-events-none fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-50 flex flex-col items-center gap-2 px-4"
       >
         {items.map((item) => (
           <div
@@ -59,7 +59,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <button
               type="button"
               onClick={() => dismiss(item.id)}
-              className="-mr-1 grid size-8 place-items-center rounded-md text-fg-muted hover:bg-subtle"
+              className="-mr-1 grid size-11 shrink-0 sm:size-8 place-items-center rounded-md text-fg-muted hover:bg-subtle"
               aria-label="알림 닫기"
             >
               <X className="size-4" aria-hidden />

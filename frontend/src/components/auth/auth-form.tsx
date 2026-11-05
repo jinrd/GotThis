@@ -50,7 +50,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-12">
+    <main className="auth-page flex items-center justify-center">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="flex justify-center">
@@ -63,7 +63,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </h1>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-line bg-surface p-6 shadow-sm" noValidate>
+        <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-line bg-surface p-5 sm:p-6" noValidate>
           {error && (
             <div role="alert" className="flex items-start gap-2 rounded-lg bg-danger-soft px-3 py-2.5 text-sm text-danger">
               <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
@@ -77,7 +77,6 @@ export function AuthForm({ mode }: { mode: Mode }) {
               type="email"
               autoComplete="email"
               required
-              autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
@@ -123,7 +122,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
         <p className="mt-6 text-center text-base text-fg-muted">
           {isSignup ? "이미 계정이 있나요? " : "처음이신가요? "}
-          <Link href={isSignup ? "/login" : "/signup"} className="font-medium text-accent underline-offset-4 hover:underline">
+          <Link href={isSignup ? "/login" : "/signup"} className="inline-flex min-h-11 items-center font-medium text-accent underline-offset-4 hover:underline">
             {isSignup ? "로그인" : "계정 만들기"}
           </Link>
         </p>

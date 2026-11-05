@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useIsMutating } from "@tanstack/react-query";
 import { ArrowLeft, Check, ChevronDown, Loader2, Plus, Settings, Trash2, X } from "lucide-react";
 import { priorities, type FieldDefinition, type Tag, type Task } from "@/lib/api/types";
@@ -20,6 +20,7 @@ import { DoneCheckbox } from "./task-bits";
 const moreKey = "sf.detail.more";
 
 type TaskDetailProps = {
+  modal: boolean;
   taskId: number;
   fallback: Task | undefined;
   fields: FieldDefinition[];
@@ -28,12 +29,24 @@ type TaskDetailProps = {
   onManageTags: () => void;
 };
 
-export function TaskDetail({ taskId, fallback, fields, tags, onClose, onManageTags }: TaskDetailProps) {
+export function TaskDetail({ modal, taskId, fallback, fields, tags, onClose, onManageTags }: TaskDetailProps) {
   const { listId, statuses, actions, requestDelete } = useListContext();
   const { data, error } = useTask(listId, taskId);
   const task = data ?? fallback;
   const saving = useIsMutating({ mutationKey: ["task-save"] }) > 0;
   const [showMore, setShowMore] = useState(() => readStorage(moreKey) === "open");
+  const panelRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!modal) return;
+    const previous = document.activeElement;
+    panelRef.current?.focus({ preventScroll: true });
+    return () => {
+      if (previous instanceof HTMLElement) {
+        requestAnimationFrame(() => { if (previous.isConnected) previous.focus({ preventScroll: true }); });
+      }
+    };
+  }, [modal]);
 
   // Esc로 닫기 (입력 중이거나 다른 창이 열려 있을 때는 그쪽이 먼저 Esc를 받는다)
   useEffect(() => {
@@ -57,10 +70,14 @@ export function TaskDetail({ taskId, fallback, fields, tags, onClose, onManageTa
 
   return (
     <aside
+      ref={panelRef}
+      role={modal ? "dialog" : undefined}
+      aria-modal={modal || undefined}
+      tabIndex={-1}
       aria-label="할 일 상세"
-      className="fixed inset-0 z-30 flex flex-col bg-surface lg:static lg:z-auto lg:w-[28rem] lg:shrink-0 lg:border-l lg:border-line"
+      className="app-safe-area fixed inset-0 z-30 flex min-h-0 flex-col bg-surface lg:static lg:z-auto lg:w-[28rem] lg:shrink-0 lg:border-l lg:border-line"
     >
-      <div className="flex items-center gap-2 border-b border-line px-3 py-2">
+      <div className="flex shrink-0 items-center gap-2 border-b border-line px-3 py-2">
         <IconButton label="상세 닫기" onClick={onClose}>
           <ArrowLeft className="size-5 lg:hidden" aria-hidden />
           <X className="hidden size-5 lg:block" aria-hidden />
@@ -93,7 +110,7 @@ export function TaskDetail({ taskId, fallback, fields, tags, onClose, onManageTa
           {error ? errorMessage(error) : "불러오는 중…"}
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto px-5 py-5">
+        <div className="safe-bottom min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5">
           <div className="flex items-start gap-3">
             <div className="pt-2">
               <DoneCheckbox task={task} />
@@ -101,7 +118,7 @@ export function TaskDetail({ taskId, fallback, fields, tags, onClose, onManageTa
             <TitleEditor key={task.id} task={task} onSave={(title) => actions.update.mutate({ taskId: task.id, body: { title } })} />
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-6 grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="detail-status">상태</Label>
               <Select
@@ -132,7 +149,7 @@ export function TaskDetail({ taskId, fallback, fields, tags, onClose, onManageTa
                 ))}
               </Select>
             </div>
-            <div className="sm:col-span-2">
+            <div className="col-span-2">
               <Label htmlFor="detail-due">마감일</Label>
               <div className="flex gap-2">
                 <input
@@ -221,7 +238,7 @@ function TitleEditor({ task, onSave }: { task: Task; onSave: (title: string) => 
         }
       }}
       aria-label="제목"
-      className="field-sizing-content min-h-11 w-full resize-none rounded-lg px-2 py-1.5 text-xl font-semibold text-fg hover:bg-subtle focus:bg-subtle focus:outline-none"
+      className="field-sizing-content min-h-11 min-w-0 w-full resize-none rounded-lg px-2 py-1.5 text-xl font-semibold text-fg hover:bg-subtle focus:bg-subtle focus:outline-none"
     />
   );
 }
@@ -279,7 +296,7 @@ function TagSection({ task, tags, onManageTags }: { task: Task; tags: Tag[]; onM
                   type="button"
                   aria-pressed={on}
                   onClick={() => actions.setTag.mutate({ taskId: task.id, tagId: tag.id, attached: !on })}
-                  className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm ${
+                  className={`inline-flex min-h-11 items-center sm:min-h-9 gap-1.5 rounded-full border px-3 text-sm ${
                     on ? "border-accent bg-accent-soft font-medium text-fg" : "border-line text-fg-muted hover:bg-subtle"
                   }`}
                 >

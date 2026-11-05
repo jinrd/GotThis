@@ -47,7 +47,7 @@ export function ListView({ groups, addingStatusId, onAddingChange }: ViewProps) 
   return (
     <TaskDnd groups={groups} variant="row">
       {(view) => (
-        <div className="mx-auto w-full max-w-4xl space-y-6 px-4 py-4 md:px-6">
+        <div className="safe-bottom mx-auto w-full max-w-4xl space-y-5 px-4 pt-3 sm:space-y-6 sm:py-4 md:px-6">
           {statuses.map((status) => {
             const tasks = view.get(status.id) ?? [];
             const isCollapsed = collapsed.has(status.id);
@@ -58,7 +58,7 @@ export function ListView({ groups, addingStatusId, onAddingChange }: ViewProps) 
                     type="button"
                     onClick={() => toggle(status.id)}
                     aria-expanded={!isCollapsed}
-                    className="flex min-h-10 w-full items-center gap-2 rounded-lg px-1 text-left text-base hover:bg-subtle"
+                    className="flex min-h-11 w-full sm:min-h-10 items-center gap-2 rounded-lg px-1 text-left text-base hover:bg-subtle"
                   >
                     <ChevronDown className={`size-5 text-fg-muted transition ${isCollapsed ? "-rotate-90" : ""}`} aria-hidden />
                     <StatusTitle status={status} count={tasks.length} />
@@ -95,14 +95,14 @@ export function BoardView({ groups, addingStatusId, onAddingChange }: ViewProps)
   return (
     <TaskDnd groups={groups} variant="card">
       {(view) => (
-        <div className="flex h-full snap-x scroll-px-4 gap-4 overflow-x-auto px-4 py-4 md:scroll-px-6 md:px-6">
+        <div className="flex min-h-0 flex-1 snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto overscroll-x-contain px-4 py-4 md:scroll-px-6 md:px-6">
           {statuses.map((status) => {
             const tasks = view.get(status.id) ?? [];
             return (
               <section
                 key={status.id}
                 aria-label={status.name}
-                className="flex max-h-full w-[85vw] shrink-0 snap-start flex-col rounded-2xl bg-subtle sm:w-80"
+                className="flex max-h-full w-[calc(100vw-3.5rem)] shrink-0 snap-start flex-col rounded-2xl bg-subtle sm:w-80"
               >
                 <h2 className="px-4 pt-3 pb-2 text-base">
                   <StatusTitle status={status} count={tasks.length} />

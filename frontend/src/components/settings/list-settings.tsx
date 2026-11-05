@@ -45,7 +45,7 @@ export function ListSettings({ list, tab, onTabChange, onDeleted }: ListSettings
             role="tab"
             aria-selected={tab === key}
             onClick={() => onTabChange(key)}
-            className={`min-h-10 rounded-md text-base ${
+            className={`min-h-11 rounded-md text-base sm:min-h-10 ${
               tab === key ? "bg-surface font-semibold text-fg shadow-sm" : "text-fg-muted hover:text-fg"
             }`}
           >

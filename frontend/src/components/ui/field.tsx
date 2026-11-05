@@ -1,7 +1,7 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
 
 export const inputClass =
-  "min-h-11 w-full rounded-lg border border-line-strong bg-surface px-3 text-base text-fg placeholder:text-fg-muted focus:border-accent focus:outline-none focus-visible:outline-2";
+  "min-h-11 min-w-0 w-full rounded-lg border border-line-strong bg-surface px-3 text-base text-fg placeholder:text-fg-muted focus:border-accent focus:outline-none focus-visible:outline-2";
 
 export function Input({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={`${inputClass} ${className}`} {...props} />;

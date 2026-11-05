@@ -72,7 +72,7 @@ export function FilterBar({ filter, onChange, statuses, tags, searchRef }: Filte
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        <div className="relative flex-1 md:max-w-sm">
+        <div className="relative min-w-0 flex-1 md:max-w-sm">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-fg-muted" aria-hidden />
           <input
             ref={searchRef}
@@ -83,7 +83,7 @@ export function FilterBar({ filter, onChange, statuses, tags, searchRef }: Filte
             onKeyDown={(e) => {
               if (e.key === "Escape") e.currentTarget.blur();
             }}
-            placeholder="제목·설명 검색  ( / )"
+            placeholder="제목·설명 검색"
             aria-label="할 일 검색"
             className={`${inputClass} pl-10`}
           />
@@ -103,7 +103,7 @@ export function FilterBar({ filter, onChange, statuses, tags, searchRef }: Filte
       </div>
 
       {panelOpen && (
-        <div id="filter-panel" className="grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center">
+        <div id="filter-panel" className="grid grid-cols-2 gap-3 rounded-xl bg-subtle p-3 md:flex md:flex-wrap md:items-center">
           <Select
             aria-label="상태로 거르기"
             value={filter.statusId ?? ""}
@@ -123,10 +123,10 @@ export function FilterBar({ filter, onChange, statuses, tags, searchRef }: Filte
             onChange={(e) => set("priority", (e.target.value || undefined) as FilterState["priority"])}
             className="md:w-40"
           >
-            <option value="">모든 중요도</option>
+            <option value="">중요도</option>
             {priorities.map((p) => (
               <option key={p} value={p}>
-                중요도 {priorityLabels[p]}
+                {priorityLabels[p]}
               </option>
             ))}
           </Select>

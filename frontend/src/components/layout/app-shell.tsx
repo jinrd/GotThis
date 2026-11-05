@@ -1,11 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { Menu as MenuIcon, PanelLeftOpen, X } from "lucide-react";
 import { getToken, setUnauthorizedHandler } from "@/lib/api/client";
 import { readStorage, storageKeys, writeStorage } from "@/lib/storage";
 import { useShortcut } from "@/hooks/use-shortcut";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { IconButton } from "@/components/ui/button";
 import { NewListDialog } from "./new-list-dialog";
 import { ShortcutsDialog } from "./shortcuts-dialog";
@@ -27,12 +28,25 @@ export function useAppShell(): AppShellApi {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
   const [ready, setReady] = useState(false);
   const [newListOpen, setNewListOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const drawerRef = useRef<HTMLDialogElement>(null);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
+  useEffect(() => {
+    const drawer = drawerRef.current;
+    if (!drawer || !ready) return;
+    if (drawerOpen && !drawer.open) drawer.showModal();
+    if (!drawerOpen && drawer.open) drawer.close();
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => { if (desktop.matches) setDrawerOpen(false); };
+    closeOnDesktop();
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, [drawerOpen, ready]);
 
   // 토큰은 브라우저 저장소에만 있으므로 화면은 브라우저에서 확인한 뒤에 그린다
   useEffect(() => {
@@ -92,28 +106,31 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <AppShellContext.Provider value={api}>
-      <div className="flex h-dvh overflow-hidden">
+      <div className="app-safe-area flex h-dvh overflow-hidden">
         {/* 넓은 화면: 숨기기 전까지 항상 보이는 사이드바 */}
-        {!collapsed && (
+        {isDesktop && !collapsed && (
           <aside className="hidden w-64 shrink-0 border-r border-line bg-surface lg:block">{sidebar(true)}</aside>
         )}
 
         {/* 좁은 화면: 서랍처럼 열리는 사이드바 */}
-        {drawerOpen && (
-          <div className="fixed inset-0 z-40 lg:hidden" key={pathname}>
-            <div className="absolute inset-0 bg-black/45" onClick={() => setDrawerOpen(false)} aria-hidden />
-            <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] bg-surface shadow-xl">
-              <div className="absolute top-3 right-3">
-                <IconButton label="메뉴 닫기" onClick={() => setDrawerOpen(false)}>
-                  <X className="size-5" aria-hidden />
-                </IconButton>
-              </div>
-              {sidebar(false)}
-            </aside>
+        <dialog
+          ref={drawerRef}
+          aria-label="목록 메뉴"
+          onClose={(e) => { if (e.target === e.currentTarget) setDrawerOpen(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget) setDrawerOpen(false); }}
+          className="fixed inset-y-0 left-0 m-0 h-dvh max-h-none w-80 max-w-[calc(100vw-2rem)] border-0 bg-surface p-0 text-fg shadow-xl lg:hidden"
+        >
+          <div className="app-safe-area relative h-full">
+            <div className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4">
+              <IconButton label="메뉴 닫기" onClick={() => setDrawerOpen(false)}>
+                <X className="size-5" aria-hidden />
+              </IconButton>
+            </div>
+            {drawerOpen && sidebar(false)}
           </div>
-        )}
+        </dialog>
 
-        <main className="flex min-w-0 flex-1 flex-col">{children}</main>
+        <main className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</main>
       </div>
       <NewListDialog open={newListOpen} onClose={() => setNewListOpen(false)} />
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />

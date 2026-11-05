@@ -86,8 +86,8 @@ export function Sidebar({ onNewList, onShortcuts, onNavigate, onCollapse }: Side
   };
 
   return (
-    <nav aria-label="목록" className="flex h-full flex-col gap-4 p-4">
-      <div className="flex items-center justify-between gap-2">
+    <nav aria-label="목록" className="safe-bottom flex h-full flex-col gap-5 p-4">
+      <div className="flex min-h-11 items-center justify-between gap-2 pr-12 lg:pr-0">
         <Link href="/lists" onClick={onNavigate} className="flex items-center gap-2 px-2 text-lg font-bold tracking-tight">
           <BrandMark size={24} />
           {brand.name}
@@ -120,7 +120,7 @@ export function Sidebar({ onNewList, onShortcuts, onNavigate, onCollapse }: Side
               );
             }
             return (
-              <li key={list.id} className={`group flex items-center rounded-lg ${active ? "bg-subtle" : "hover:bg-subtle"}`}>
+              <li key={list.id} className={`group flex items-center rounded-lg ${active ? "bg-accent-soft text-accent" : "hover:bg-subtle"}`}>
                 <Link
                   href={`/lists/${list.id}`}
                   onClick={onNavigate}
