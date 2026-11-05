@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CircleAlert } from "lucide-react";
 import { authApi } from "@/lib/api/endpoints";
+import { brand } from "@/lib/brand";
 import { setToken } from "@/lib/api/client";
 import { errorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <p className="text-2xl font-bold tracking-tight">StudyFlow</p>
+          <p className="text-2xl font-bold tracking-tight">{brand.name}</p>
+          <p className="mt-1 text-sm font-medium text-accent">{brand.tagline}</p>
           <h1 className="mt-2 text-base text-fg-muted">
             {isSignup ? "계정을 만들고 바로 시작해 보세요" : "다시 오신 걸 환영해요"}
           </h1>

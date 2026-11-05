@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ListTodo, Plus } from "lucide-react";
 import { useTaskLists } from "@/hooks/queries";
 import { readStorage, storageKeys } from "@/lib/storage";
+import { brand } from "@/lib/brand";
 import { errorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { ToggleOnlyHeader, useAppShell } from "@/components/layout/app-shell";
@@ -27,7 +28,7 @@ export function ListsHome() {
   return (
     <>
       <ToggleOnlyHeader>
-        <span className="font-semibold">StudyFlow</span>
+        <span className="font-semibold">{brand.name}</span>
       </ToggleOnlyHeader>
       <div className="flex flex-1 items-center justify-center px-4">
         {error ? (

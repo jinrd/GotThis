@@ -1,4 +1,4 @@
-# StudyFlow Frontend
+# GotThis Frontend
 
 Next.js 16 (App Router) · TypeScript strict · Tailwind CSS v4 · TanStack Query · dnd-kit
 

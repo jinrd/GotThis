@@ -8,6 +8,7 @@ import { ArrowDown, ArrowUp, Keyboard, LogOut, PanelLeftClose, Pencil, Plus, Set
 import { taskListApi } from "@/lib/api/endpoints";
 import type { TaskList } from "@/lib/api/types";
 import { setToken } from "@/lib/api/client";
+import { brand } from "@/lib/brand";
 import { errorMessage } from "@/lib/errors";
 import { queryKeys, useTaskLists } from "@/hooks/queries";
 import { Button, IconButton } from "@/components/ui/button";
@@ -87,7 +88,7 @@ export function Sidebar({ onNewList, onShortcuts, onNavigate, onCollapse }: Side
     <nav aria-label="목록" className="flex h-full flex-col gap-4 p-4">
       <div className="flex items-center justify-between gap-2">
         <Link href="/lists" onClick={onNavigate} className="px-2 text-lg font-bold tracking-tight">
-          StudyFlow
+          {brand.name}
         </Link>
         {onCollapse && (
           <IconButton label="사이드바 숨기기 ( [ )" onClick={onCollapse}>
