@@ -22,6 +22,7 @@ services:
       context: ./frontend
       args:
         BACKEND_URL: http://gotthis-backend:8080
+        SITE_URL: https://gotthis.199510280.xyz
     restart: unless-stopped
     depends_on:
       - gotthis-backend

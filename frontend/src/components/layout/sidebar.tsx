@@ -12,6 +12,7 @@ import { brand } from "@/lib/brand";
 import { errorMessage } from "@/lib/errors";
 import { queryKeys, useTaskLists } from "@/hooks/queries";
 import { Button, IconButton } from "@/components/ui/button";
+import { BrandMark } from "@/components/ui/brand-mark";
 import { ColorDot } from "@/components/ui/color-picker";
 import { inputClass } from "@/components/ui/field";
 import { ConfirmDialog } from "@/components/ui/dialog";
@@ -87,7 +88,8 @@ export function Sidebar({ onNewList, onShortcuts, onNavigate, onCollapse }: Side
   return (
     <nav aria-label="목록" className="flex h-full flex-col gap-4 p-4">
       <div className="flex items-center justify-between gap-2">
-        <Link href="/lists" onClick={onNavigate} className="px-2 text-lg font-bold tracking-tight">
+        <Link href="/lists" onClick={onNavigate} className="flex items-center gap-2 px-2 text-lg font-bold tracking-tight">
+          <BrandMark size={24} />
           {brand.name}
         </Link>
         {onCollapse && (

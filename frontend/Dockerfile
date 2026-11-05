@@ -8,6 +8,9 @@ COPY . .
 
 ARG BACKEND_URL=http://gotthis-backend:8080
 ENV BACKEND_URL=${BACKEND_URL}
+# 공유 미리보기(og:image)의 절대 주소. 빌드할 때 메타데이터에 들어가므로 빌드 단계에서 넣는다.
+ARG SITE_URL=https://gotthis.199510280.xyz
+ENV SITE_URL=${SITE_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN mkdir -p public && npm run build
