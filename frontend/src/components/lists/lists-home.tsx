@@ -7,7 +7,7 @@ import { useTaskLists } from "@/hooks/queries";
 import { readStorage, storageKeys } from "@/lib/storage";
 import { errorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
-import { SidebarToggle, useAppShell } from "@/components/layout/app-shell";
+import { ToggleOnlyHeader, useAppShell } from "@/components/layout/app-shell";
 
 // /lists: 마지막으로 보던 목록으로 보내고, 목록이 하나도 없으면 첫 목록을 만들도록 안내한다
 export function ListsHome() {
@@ -26,10 +26,9 @@ export function ListsHome() {
 
   return (
     <>
-      <header className="flex items-center gap-2 border-b border-line px-4 py-3 lg:hidden">
-        <SidebarToggle />
+      <ToggleOnlyHeader>
         <span className="font-semibold">StudyFlow</span>
-      </header>
+      </ToggleOnlyHeader>
       <div className="flex flex-1 items-center justify-center px-4">
         {error ? (
           <p role="alert" className="text-base text-danger">

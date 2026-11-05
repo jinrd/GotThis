@@ -1,20 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useIsMutating, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, ChevronDown, Loader2, Plus, Trash2, X } from "lucide-react";
-import { tagApi } from "@/lib/api/endpoints";
+import { useIsMutating } from "@tanstack/react-query";
+import { ArrowLeft, Check, ChevronDown, Loader2, Plus, Settings, Trash2, X } from "lucide-react";
 import { priorities, type FieldDefinition, type Tag, type Task } from "@/lib/api/types";
-import { defaultColor } from "@/lib/colors";
 import { errorMessage } from "@/lib/errors";
 import { readStorage, writeStorage } from "@/lib/storage";
 import { isDone, priorityLabels, statusLabel } from "@/lib/tasks";
-import { queryKeys, useSubtasks, useTask } from "@/hooks/queries";
+import { useSubtasks, useTask } from "@/hooks/queries";
 import { Button, IconButton } from "@/components/ui/button";
 import { ColorDot } from "@/components/ui/color-picker";
 import { inputClass, Label, Select } from "@/components/ui/field";
 import { Menu } from "@/components/ui/menu";
-import { useToast } from "@/components/ui/toast";
 import { AddTask } from "./add-task";
 import { useListContext } from "./list-context";
 import { PropertyInput } from "./property-input";
@@ -28,9 +25,10 @@ type TaskDetailProps = {
   fields: FieldDefinition[];
   tags: Tag[];
   onClose: () => void;
+  onManageTags: () => void;
 };
 
-export function TaskDetail({ taskId, fallback, fields, tags, onClose }: TaskDetailProps) {
+export function TaskDetail({ taskId, fallback, fields, tags, onClose, onManageTags }: TaskDetailProps) {
   const { listId, statuses, actions, requestDelete } = useListContext();
   const { data, error } = useTask(listId, taskId);
   const task = data ?? fallback;
@@ -175,7 +173,7 @@ export function TaskDetail({ taskId, fallback, fields, tags, onClose }: TaskDeta
                 task={task}
                 onSave={(description) => actions.update.mutate({ taskId: task.id, body: { description } })}
               />
-              <TagSection task={task} tags={tags} />
+              <TagSection task={task} tags={tags} onManageTags={onManageTags} />
               {fields.length > 0 && (
                 <section className="space-y-4">
                   <h3 className="text-sm font-medium text-fg-muted">필드</h3>
@@ -248,84 +246,52 @@ function DescriptionEditor({ task, onSave }: { task: Task; onSave: (description:
   );
 }
 
-function TagSection({ task, tags }: { task: Task; tags: Tag[] }) {
+// 이 할 일에 태그를 붙이고 떼기만 한다. 태그 만들기·색 바꾸기는 목록 설정의 태그 탭이 맡는다.
+function TagSection({ task, tags, onManageTags }: { task: Task; tags: Tag[]; onManageTags: () => void }) {
   const { actions } = useListContext();
-  const qc = useQueryClient();
-  const toast = useToast();
-  const [adding, setAdding] = useState(false);
-  const [name, setName] = useState("");
   const attached = new Set(task.tags.map((t) => t.id));
-
-  // 새 태그를 만들고 바로 이 할 일에 붙인다
-  const createTag = useMutation({
-    mutationFn: (tagName: string) => tagApi.create({ name: tagName, color: defaultColor }),
-    onSuccess: (tag) => {
-      void qc.invalidateQueries({ queryKey: queryKeys.tags });
-      actions.setTag.mutate({ taskId: task.id, tagId: tag.id, attached: true });
-      setName("");
-      setAdding(false);
-    },
-    onError: (err) => toast.error(errorMessage(err)),
-  });
 
   return (
     <section>
-      <h3 className="mb-2 text-sm font-medium text-fg-muted">태그</h3>
-      <div className="flex flex-wrap gap-2">
-        {tags.map((tag) => {
-          const on = attached.has(tag.id);
-          return (
-            <button
-              key={tag.id}
-              type="button"
-              aria-pressed={on}
-              onClick={() => actions.setTag.mutate({ taskId: task.id, tagId: tag.id, attached: !on })}
-              className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm ${
-                on ? "border-accent bg-accent-soft font-medium text-fg" : "border-line text-fg-muted hover:bg-subtle"
-              }`}
-            >
-              {on ? <Check className="size-3.5" aria-hidden /> : <ColorDot color={tag.color} className="size-2.5" />}
-              {tag.name}
-            </button>
-          );
-        })}
-        {adding ? (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (name.trim()) createTag.mutate(name.trim());
-            }}
-            className="flex gap-2"
-          >
-            <input
-              autoFocus
-              value={name}
-              maxLength={30}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  e.stopPropagation();
-                  setAdding(false);
-                }
-              }}
-              aria-label="새 태그 이름"
-              placeholder="태그 이름"
-              className={`${inputClass} min-h-9 w-36 text-sm`}
-            />
-            <Button type="submit" size="sm" variant="primary" disabled={createTag.isPending}>
-              추가
-            </Button>
-          </form>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setAdding(true)}
-            className="inline-flex min-h-9 items-center gap-1 rounded-full border border-dashed border-line-strong px-3 text-sm text-fg-muted hover:bg-subtle"
-          >
-            <Plus className="size-3.5" aria-hidden />새 태그
-          </button>
-        )}
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-medium text-fg-muted">태그</h3>
+        <Button variant="ghost" size="sm" className="text-fg-muted" onClick={onManageTags}>
+          <Settings className="size-4" aria-hidden />
+          태그 관리
+        </Button>
       </div>
+      {tags.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-line-strong px-4 py-4 text-center">
+          <p className="text-sm text-fg-muted">아직 만든 태그가 없어요.</p>
+          <Button variant="secondary" size="sm" className="mt-3" onClick={onManageTags}>
+            <Plus className="size-4" aria-hidden />
+            태그 만들러 가기
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => {
+              const on = attached.has(tag.id);
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => actions.setTag.mutate({ taskId: task.id, tagId: tag.id, attached: !on })}
+                  className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-sm ${
+                    on ? "border-accent bg-accent-soft font-medium text-fg" : "border-line text-fg-muted hover:bg-subtle"
+                  }`}
+                >
+                  {on ? <Check className="size-3.5" aria-hidden /> : <ColorDot color={tag.color} className="size-2.5" />}
+                  {tag.name}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-sm text-fg-muted">눌러서 붙이거나 뗄 수 있어요.</p>
+        </>
+      )}
     </section>
   );
 }

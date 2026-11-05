@@ -5,6 +5,7 @@ import { Dialog } from "@/components/ui/dialog";
 export const shortcuts = [
   { keys: ["N"], description: "새 할 일 추가" },
   { keys: ["/"], description: "검색하기" },
+  { keys: ["["], description: "사이드바 숨기기 / 보이기" },
   { keys: ["Esc"], description: "열린 창이나 상세 닫기" },
   { keys: ["?"], description: "단축키 보기" },
 ] as const;

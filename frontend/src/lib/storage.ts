@@ -25,6 +25,7 @@ export const storageKeys = {
   token: "sf.token",
   theme: "sf.theme",
   lastListId: "sf.lastListId",
+  sidebarCollapsed: "sf.sidebarCollapsed",
   view: (listId: number) => `sf.view.${listId}`,
   hint: (name: string) => `sf.hint.${name}`,
 } as const;

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { ColorDot } from "@/components/ui/color-picker";
 import { ConfirmDialog } from "@/components/ui/dialog";
 import { Hint } from "@/components/ui/hint";
-import { SidebarToggle } from "@/components/layout/app-shell";
+import { SidebarToggle, ToggleOnlyHeader } from "@/components/layout/app-shell";
 import { isSettingsTab, ListSettings, type SettingsTab } from "@/components/settings/list-settings";
 import { countActive, emptyFilter, FilterBar, toTaskFilter, type FilterState } from "@/components/tasks/filter-bar";
 import { ListContext, type ListContextValue } from "@/components/tasks/list-context";
@@ -105,9 +105,7 @@ function ListScreenInner({ listId }: { listId: number }) {
   if (!listsPending && !list) {
     return (
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center gap-2 border-b border-line px-4 py-3 lg:hidden">
-          <SidebarToggle />
-        </header>
+        <ToggleOnlyHeader />
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
           <p className="text-lg font-semibold">목록을 찾을 수 없어요</p>
           <p className="text-base text-fg-muted">이미 지워졌거나 주소가 잘못됐을 수 있어요.</p>
@@ -209,6 +207,7 @@ function ListScreenInner({ listId }: { listId: number }) {
             fields={fields}
             tags={tags}
             onClose={closeTask}
+            onManageTags={() => setParam("settings", "tags")}
           />
         )}
       </div>
