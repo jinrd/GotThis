@@ -1,0 +1,33 @@
+name: gotthis
+
+services:
+  gotthis-backend:
+    image: gotthis-backend:prod
+    build:
+      context: ./backend
+    restart: unless-stopped
+    stop_grace_period: 40s
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://prod-postgres:5432/gotthis
+      DB_USERNAME: prod_app
+      DB_PASSWORD: ${GOTTHIS_DB_PASSWORD:?GOTTHIS_DB_PASSWORD is required}
+      JWT_SECRET: ${GOTTHIS_JWT_SECRET:?GOTTHIS_JWT_SECRET is required}
+    networks:
+      - caddy_proxy
+
+  gotthis-frontend:
+    image: gotthis-frontend:prod
+    build:
+      context: ./frontend
+      args:
+        BACKEND_URL: http://gotthis-backend:8080
+    restart: unless-stopped
+    depends_on:
+      - gotthis-backend
+    networks:
+      - caddy_proxy
+
+networks:
+  caddy_proxy:
+    external: true
